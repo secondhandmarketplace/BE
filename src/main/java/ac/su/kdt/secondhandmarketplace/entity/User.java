@@ -14,33 +14,33 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
-    private Long id;
+    private Long id;  // 사용자 고유 식별자
     
     @ManyToOne
     @JoinColumn(name = "university_id", nullable = false)
-    private University university;
+    private University university;  // 소속 대학교
     
     @Column(nullable = false, length = 30)
-    private String username;
+    private String username;  // 로그인 아이디 (30자 제한)
     
     @Column(nullable = false, length = 100)
-    private String password;
+    private String password;  // 암호화된 비밀번호 (100자 제한)
     
     @Column(nullable = false, length = 100)
-    private String email;
+    private String email;  // 이메일 주소 (100자 제한)
     
     @Column(nullable = false, length = 30)
-    private String nickname;
+    private String nickname;  // 닉네임 (30자 제한)
     
     @Column(name = "is_email_verified", nullable = false)
-    private Boolean isEmailVerified;
+    private Boolean isEmailVerified;  // 이메일 인증 여부
     
     @Column(name = "profile_image_url", length = 200)
-    private String profileImageUrl;
+    private String profileImageUrl;  // 프로필 이미지 URL (200자 제한)
     
     @Column(name = "manner_score", nullable = false)
-    private Integer mannerScore;
+    private Double mannerScore;  // 매너 점수
     
     @Column(name = "create_at", nullable = false)
-    private LocalDateTime createAt;
+    private LocalDateTime createAt;  // 계정 생성 시간
 } 

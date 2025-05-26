@@ -1,0 +1,14 @@
+<dependencies>
+    <!-- OpenAI API Client -->
+    <dependency>
+        <groupId>com.theokanning.openai-gpt3-java</groupId>
+        <artifactId>service</artifactId>
+        <version>0.18.2</version>
+    </dependency>
+    <!-- Perplexity API Client -->
+    <dependency>
+        <groupId>com.perplexity</groupId>
+        <artifactId>perplexity-java</artifactId>
+        <version>1.0.0</version>
+    </dependency>
+</dependencies> 

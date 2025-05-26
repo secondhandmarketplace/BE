@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@Table(name = "product_image")
+@Table(name = "productImage")
 public class ProductImage {
     
     @Id
@@ -20,9 +20,12 @@ public class ProductImage {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
     
-    @Column(name = "image_url", nullable = false)
+    @Column(name = "image_url", nullable = false, length = 200)
     private String imageUrl;
     
-    @Column(name = "create_at", nullable = false)
-    private LocalDateTime createAt;
+    @Column(name = "sequence", nullable = false)
+    private Integer sequence;
+    
+    @Column(name = "uploaded_at", nullable = false)
+    private LocalDateTime uploadedAt;
 } 

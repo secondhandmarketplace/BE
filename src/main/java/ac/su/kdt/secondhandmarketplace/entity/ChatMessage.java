@@ -8,25 +8,28 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@Table(name = "chat_message")
+@Table(name = "chatmessage")
 public class ChatMessage {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "message_id")
+    @Column(name = "chatmessage_id")
     private Long id;
     
     @ManyToOne
-    @JoinColumn(name = "chat_room_id", nullable = false)
+    @JoinColumn(name = "chatroom_id", nullable = false)
     private ChatRoom chatRoom;
     
     @ManyToOne
-    @JoinColumn(name = "sender_id", nullable = false)
-    private User sender;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
     
-    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
-    private String content;
+    @Column(name = "message_type", nullable = false, length = 20)
+    private String messageType;
     
-    @Column(name = "create_at", nullable = false)
-    private LocalDateTime createAt;
+    @Column(name = "message_content", columnDefinition = "TEXT")
+    private String messageContent;
+    
+    @Column(name = "sent_at", nullable = false)
+    private LocalDateTime sentAt;
 } 
