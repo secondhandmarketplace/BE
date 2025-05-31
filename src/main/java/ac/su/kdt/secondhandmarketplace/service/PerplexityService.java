@@ -3,12 +3,14 @@ package ac.su.kdt.secondhandmarketplace.service;
 import ac.su.kdt.secondhandmarketplace.dto.ProductRecommendationDTO;
 import ac.su.kdt.secondhandmarketplace.dto.RecommendationCriteria;
 import ac.su.kdt.secondhandmarketplace.entity.Product;
-import ac.su.kdt.secondhandmarketplace.entity.Review;
 import ac.su.kdt.secondhandmarketplace.repository.ProductRepository;
 import ac.su.kdt.secondhandmarketplace.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -34,6 +36,9 @@ public class PerplexityService {
     private final ReviewRepository reviewRepository;
     private final PromptService promptService;
     private static final Pattern PRODUCT_ID_PATTERN = Pattern.compile("\\[상품(\\d+)\\]([^\\[]+)");
+
+    @Value("${PERPLEXITY_API_KEY}") // Perplexity API 키를 application.properties에서 읽어옴
+    String apiKey;
 
     @Autowired
     public PerplexityService(PerplexityConfig perplexityConfig, ProductRepository productRepository, ReviewRepository reviewRepository, PromptService promptService) {
@@ -175,9 +180,19 @@ public class PerplexityService {
         requestBody.put("temperature", 0.7);
         requestBody.put("top_p", 0.9);
 
+
         return perplexityWebClient.post()
                 .uri("/chat/completions")
+                .header("Authorization", "Bearer " + apiKey) // ✅ 헤더 추가
+                .contentType(MediaType.APPLICATION_JSON)      // ✅ Content-Type 명시
+                .bodyValue(requestBody)                       // ✅ bodyValue 사용
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, response ->
+                        response.bodyToMono(String.class)
+                                .flatMap(errorBody ->
+                                        Mono.error(new RuntimeException("API Error: " + errorBody))
+                                )
+                )
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {});
     }
 
@@ -307,4 +322,6 @@ public class PerplexityService {
                     return new RecommendationResponse(content);
                 });
     }
+
+
 } 

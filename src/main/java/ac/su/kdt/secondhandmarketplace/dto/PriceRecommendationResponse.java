@@ -46,6 +46,11 @@ public class PriceRecommendationResponse {
     private String marketStrategy;
 
     /**
+     * AI의 원본 응답 메시지
+     */
+    private String originalResponse;
+
+    /**
      * 가격 결정 요소의 영향도를 나타내는 내부 클래스
      */
     @Data

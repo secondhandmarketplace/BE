@@ -113,8 +113,7 @@ public class PromptService {
         prompt.append("다음은 상품의 적정가를 추천하기 위한 데이터입니다:\n\n");
         
         // 사용자 요청 정보
-        prompt.append("1. 사용자 요청:\n");
-        prompt.append("- 상품: ").append(request.getUserRequest()).append("\n");
+        prompt.append("1. 사용자 요청:\n").append(request.getUserRequest()).append("\n");
         prompt.append("- 카테고리: ").append(request.getCategory()).append("\n");
         prompt.append("- 상태: ").append(request.getCondition()).append("\n");
         if (request.getCurrentPrice() != null) {

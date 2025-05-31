@@ -10,11 +10,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Getter
 public class PerplexityConfig {
 
-    @Value("${perplexity.api.key}")
+    @Value("${PERPLEXITY_API_KEY}")
     private String apiKey;
 
     @Value("${perplexity.api.base-url}")
     private String baseUrl;
+
 
     @Bean
     public WebClient perplexityWebClient() {
@@ -24,4 +25,4 @@ public class PerplexityConfig {
                 .defaultHeader("Content-Type", "application/json")
                 .build();
     }
-} 
+}

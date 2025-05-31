@@ -1,5 +1,6 @@
 package ac.su.kdt.secondhandmarketplace.dto;
 
+import jakarta.annotation.Nullable;
 import lombok.Data;
 import java.math.BigDecimal;
 
@@ -15,11 +16,7 @@ public class PriceRecommendationRequest {
      */
     private String userRequest;
 
-    /**
-     * 상품 ID
-     * 기존 상품의 가격을 참고할 때 사용
-     * 선택적 필드로, 새로운 상품 등록 시에는 null
-     */
+    @Nullable
     private Long productId;
 
     /**
@@ -41,5 +38,6 @@ public class PriceRecommendationRequest {
      * 선택적 필드로, 기존 상품의 가격 조정 시 사용
      * 새로운 상품 등록 시에는 null
      */
+    @Nullable
     private BigDecimal currentPrice;
 } 
