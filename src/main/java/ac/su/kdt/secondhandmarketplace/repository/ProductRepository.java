@@ -82,17 +82,33 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             (SELECT COUNT(cr) FROM ChatRoom cr WHERE cr.product = p) 
         END DESC
 """)
-    List<Product> findProductsByCriteria(
-            @Param("minPrice") BigDecimal minPrice,
-            @Param("maxPrice") BigDecimal maxPrice,
-            @Param("location") String location,
-            @Param("category") String category,
-            @Param("minMannerScore") Double minMannerScore,
-            @Param("minRating") Double minRating,
-            @Param("sortBy") String sortBy,
-            @Param("sortDirection") String sortDirection
+    List<Product> findProductsByCriteria( // 사용자가 말한 검색 조건에 맞는 상품을 데이터 베이스에서 조회하기위한 메서드
+            @Param("minPrice") BigDecimal minPrice, // 최소 가격
+            @Param("maxPrice") BigDecimal maxPrice, // 최대 가격
+            @Param("location") String location, // 지역 정보
+            @Param("category") String category, // 카테고리
+            @Param("minMannerScore") Double minMannerScore, // 최소 매너 점수
+            @Param("minRating") Double minRating, // 최소 평점
+            @Param("sortBy") String sortBy, // 정렬 기준 (price, rating, viewCount, chatCount)
+            @Param("sortDirection") String sortDirection // 정렬 방향 (asc, desc)
     );
 
+    /**
+     * 카테고리와 제품명으로 유사 제품을 검색
+     */
+    @Query("SELECT p FROM Product p WHERE p.category.categoryName = :category AND p.title LIKE %:keyword%")
+    List<Product> findByCategoryAndTitleContaining(
+        @Param("category") String category,
+        @Param("keyword") String keyword
+    );
 
+    /**
+     * 카테고리와 상품 상태로 유사 제품을 검색
+     */
+    @Query("SELECT p FROM Product p WHERE p.category.categoryName = :category AND p.status = :condition")
+    List<Product> findByCategoryAndCondition(
+        @Param("category") String category,
+        @Param("condition") String condition
+    );
 
 }
