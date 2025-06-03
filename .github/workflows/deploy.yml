@@ -1,0 +1,38 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [ "main" ]  # 원하는 브랜치에 맞게 수정 가능
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH key
+        run: |
+          echo "${{ secrets.EC2_KEY }}" > key.pem
+          chmod 400 key.pem
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            # 배포 디렉토리 없으면 clone
+            if [ ! -d "kdt-backend" ]; then
+              git clone https://github.com/SU-Talk/kdt-backend.git kdt-backend
+            fi
+
+            cd kdt-backend
+            git pull origin main
+
+            ./gradlew build
+
+            docker stop kdt || true
+            docker rm kdt || true
+
+            docker build -t kdt-backend .
+            docker run -d -p 80:8080 --name kdt kdt-backend
+          EOF
