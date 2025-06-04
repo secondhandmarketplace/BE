@@ -7,9 +7,23 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.util.List;
+import ac.su.kdt.secondhandmarketplace.entity.ProductStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
+
+    // 제목과 설명에 특정 키워드가 포함된 상품을 검색하고, 상태가 'FOR_SALE'인 상품만 조회
+    // 대소문자 구분 없이 검색하며, Pageable을 사용하여 페이징 및 정렬을 지원
+    Page<Product> findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCaseAndStatus(
+            String titleKeyword, String descriptionKeyword, ProductStatus status, Pageable pageable);
+
+    // 주어진 카테고리 ID에 해당하는 상품들을 상태와 함께 페이징하여 조회
+    Page<Product> findByCategory_IdAndStatus(Long Id, ProductStatus status, Pageable pageable);
+
+    // 주어진 사용자 ID(판매자 ID)에 해당하는 상품들을 상태와 함께 페이징하여 조회
+    Page<Product> findByUser_IdAndStatus(Long Id, ProductStatus status, Pageable pageable);
 
     @Query("""
     SELECT p FROM Product p 

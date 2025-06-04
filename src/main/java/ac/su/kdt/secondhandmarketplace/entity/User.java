@@ -1,7 +1,9 @@
 package ac.su.kdt.secondhandmarketplace.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
 
@@ -9,11 +11,13 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Table(name = "user")
+@NoArgsConstructor // 파라미터 없는 기본 생성자를 자동으로 생성. JPA 사용 시 필수적
+@AllArgsConstructor // 모든 필드를 인자로 받는 생성자를 자동으로 생성
 public class User {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private Long id;  // 사용자 고유 식별자
     
     @ManyToOne

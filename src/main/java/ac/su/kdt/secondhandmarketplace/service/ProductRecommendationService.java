@@ -1,8 +1,6 @@
 package ac.su.kdt.secondhandmarketplace.service;
 
-import ac.su.kdt.secondhandmarketplace.dto.ProductRecommendationResponse;
-import ac.su.kdt.secondhandmarketplace.dto.RecommendationCriteria;
-import ac.su.kdt.secondhandmarketplace.entity.Product;
+import ac.su.kdt.secondhandmarketplace.dto.ProductRecommendation.ProductRecommendationResponse;
 import ac.su.kdt.secondhandmarketplace.repository.ProductRepository;
 import ac.su.kdt.secondhandmarketplace.repository.ReviewRepository;
 import ac.su.kdt.secondhandmarketplace.repository.UserRepository;

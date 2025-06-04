@@ -1,6 +1,7 @@
-package ac.su.kdt.secondhandmarketplace.dto;
+package ac.su.kdt.secondhandmarketplace.dto.ProductRecommendation;
 
 import ac.su.kdt.secondhandmarketplace.entity.Product;
+import ac.su.kdt.secondhandmarketplace.entity.ProductStatus;
 import ac.su.kdt.secondhandmarketplace.repository.ReviewRepository;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +14,7 @@ public class ProductRecommendationDTO {
     private Long id;                    // 상품 ID
     private String title;               // 상품명
     private BigDecimal price;           // 가격
-    private String status;              // 상태
+    private ProductStatus status;              // 상태
     private String category;            // 카테고리
     private String locationInfo;        // 위치 정보
     private Integer viewCount;          // 조회수

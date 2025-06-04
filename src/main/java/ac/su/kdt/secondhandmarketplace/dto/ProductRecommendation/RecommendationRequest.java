@@ -1,4 +1,4 @@
-package ac.su.kdt.secondhandmarketplace.dto;
+package ac.su.kdt.secondhandmarketplace.dto.ProductRecommendation;
 
 import lombok.Data;
  

@@ -1,7 +1,7 @@
 package ac.su.kdt.secondhandmarketplace.service;
 
-import ac.su.kdt.secondhandmarketplace.dto.ProductRecommendationDTO;
-import ac.su.kdt.secondhandmarketplace.dto.RecommendationCriteria;
+import ac.su.kdt.secondhandmarketplace.dto.ProductRecommendation.ProductRecommendationDTO;
+import ac.su.kdt.secondhandmarketplace.dto.ProductRecommendation.RecommendationCriteria;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;

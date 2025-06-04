@@ -1,9 +1,8 @@
 package ac.su.kdt.secondhandmarketplace.service;
 
-import ac.su.kdt.secondhandmarketplace.dto.ProductRecommendationDTO;
-import ac.su.kdt.secondhandmarketplace.dto.RecommendationCriteria;
+import ac.su.kdt.secondhandmarketplace.dto.ProductRecommendation.ProductRecommendationDTO;
+import ac.su.kdt.secondhandmarketplace.dto.ProductRecommendation.RecommendationCriteria;
 import ac.su.kdt.secondhandmarketplace.entity.Product;
-import ac.su.kdt.secondhandmarketplace.entity.Review;
 import ac.su.kdt.secondhandmarketplace.repository.ProductRepository;
 import ac.su.kdt.secondhandmarketplace.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,10 +19,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.math.BigDecimal;
-import ac.su.kdt.secondhandmarketplace.dto.ProductRecommendationResponse;
+import ac.su.kdt.secondhandmarketplace.dto.ProductRecommendation.ProductRecommendationResponse;
 import ac.su.kdt.secondhandmarketplace.config.PerplexityConfig;
-import ac.su.kdt.secondhandmarketplace.dto.RecommendationRequest;
-import ac.su.kdt.secondhandmarketplace.dto.RecommendationResponse;
+import ac.su.kdt.secondhandmarketplace.dto.ProductRecommendation.RecommendationRequest;
+import ac.su.kdt.secondhandmarketplace.dto.ProductRecommendation.RecommendationResponse;
 
 @Service
 @RequiredArgsConstructor

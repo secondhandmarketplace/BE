@@ -1,7 +1,7 @@
 package ac.su.kdt.secondhandmarketplace.controller;
 
-import ac.su.kdt.secondhandmarketplace.dto.RecommendationRequest;
-import ac.su.kdt.secondhandmarketplace.dto.RecommendationResponse;
+import ac.su.kdt.secondhandmarketplace.dto.ProductRecommendation.RecommendationRequest;
+import ac.su.kdt.secondhandmarketplace.dto.ProductRecommendation.RecommendationResponse;
 import ac.su.kdt.secondhandmarketplace.service.PerplexityService;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
