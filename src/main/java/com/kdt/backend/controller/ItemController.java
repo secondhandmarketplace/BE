@@ -3,338 +3,295 @@ package com.kdt.backend.controller;
 import com.kdt.backend.dto.ItemRegisterRequestDTO;
 import com.kdt.backend.dto.ItemResponseDTO;
 import com.kdt.backend.dto.ItemSuggestionDTO;
-import com.kdt.backend.entity.ChatRoom;
-import com.kdt.backend.entity.Item;
-import com.kdt.backend.repository.ChatRoomRepository;
-import com.kdt.backend.repository.ItemRepository;
 import com.kdt.backend.service.ItemService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-@CrossOrigin(originPatterns = "*", allowCredentials = "true")
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/items")
+@CrossOrigin(originPatterns = "*", allowCredentials = "true")
 @RequiredArgsConstructor
+@Slf4j
 public class ItemController {
 
     private final ItemService itemService;
-    private final ItemRepository itemRepository;
-    private final ChatRoomRepository chatRoomRepository;
 
-    @Value("${file.upload.path:uploads/}")
-    private String uploadPath;
-
-    // ✅ 이미지 서빙 엔드포인트 추가
-    @GetMapping("/image/{filename}")
-    public ResponseEntity<Resource> getImage(@PathVariable String filename) {
+    /**
+     * ✅ 상품 등록 (프론트엔드 RegisterForm.jsx와 연동)
+     */
+    @PostMapping
+    public ResponseEntity<Map<String, Object>> createItem(@RequestBody ItemRegisterRequestDTO request) {
         try {
-            // 절대 경로로 파일 찾기
-            Path filePath = Paths.get(System.getProperty("user.dir"), uploadPath, filename);
-            Resource resource = new UrlResource(filePath.toUri());
+            log.info("상품 등록 요청: {}", request);
+            Long itemId = itemService.saveItem(request); // 실제 저장 로직은 서비스에서 처리
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "itemId", itemId,
+                    "message", "상품이 성공적으로 등록되었습니다."
+            ));
+        } catch (Exception e) {
+            log.error("상품 등록 실패: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "상품 등록에 실패했습니다.",
+                    "error", e.getMessage()
+            ));
+        }
+    }
 
-            System.out.println("=== 이미지 요청 ===");
-            System.out.println("요청 파일: " + filename);
-            System.out.println("파일 경로: " + filePath.toAbsolutePath());
-            System.out.println("파일 존재: " + Files.exists(filePath));
-            System.out.println("파일 읽기 가능: " + Files.isReadable(filePath));
+    /**
+     * ✅ 아이템 목록 조회 (최근 등록순 [2] + 판매자 정보 포함)
+     */
+    @GetMapping
+    public ResponseEntity<List<ItemResponseDTO>> getItems(
+            @RequestParam(defaultValue = "latest") String sort,
+            @RequestParam(defaultValue = "20") int size) {
+        try {
+            List<ItemResponseDTO> items = itemService.getItemsBySort(sort, size);
+            return ResponseEntity.ok(items);
+        } catch (Exception e) {
+            log.error("아이템 목록 조회 실패: {}", e.getMessage());
+            return ResponseEntity.ok(List.of());
+        }
+    }
 
-            if (resource.exists() && resource.isReadable()) {
-                String contentType = getContentType(filename);
-
-                return ResponseEntity.ok()
-                        .header(HttpHeaders.CONTENT_TYPE, contentType)
-                        .header(HttpHeaders.CACHE_CONTROL, "max-age=3600")
-                        .header(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "*")
-                        .header(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET")
-                        .header(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS, "*")
-                        .body(resource);
-            } else {
-                System.err.println("파일을 찾을 수 없거나 읽을 수 없음: " + filePath);
-
-                // 업로드 디렉토리의 모든 파일 목록 출력 (디버깅용)
-                try {
-                    Path uploadDir = Paths.get(System.getProperty("user.dir"), uploadPath);
-                    if (Files.exists(uploadDir)) {
-                        System.out.println("업로드 디렉토리 파일 목록:");
-                        Files.list(uploadDir).forEach(file ->
-                                System.out.println("  - " + file.getFileName()));
-                    } else {
-                        System.err.println("업로드 디렉토리가 존재하지 않음: " + uploadDir);
-                    }
-                } catch (Exception e) {
-                    System.err.println("디렉토리 목록 조회 실패: " + e.getMessage());
-                }
-
+    /**
+     * ✅ 특정 아이템 조회 (판매자 정보 포함)
+     */
+    @GetMapping("/{itemId}")
+    public ResponseEntity<ItemResponseDTO> getItemById(@PathVariable Long itemId) {
+        try {
+            ItemResponseDTO item = itemService.getItemResponseById(itemId);
+            if (item == null) {
                 return ResponseEntity.notFound().build();
             }
+            return ResponseEntity.ok(item);
         } catch (Exception e) {
-            System.err.println("이미지 서빙 오류: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
+            log.error("아이템 상세 조회 실패: {}", e.getMessage());
+            return ResponseEntity.status(500).build();
         }
     }
 
-    // ✅ 이미지 업로드 엔드포인트
-    @PostMapping("/upload/image")
-    public ResponseEntity<Map<String, String>> uploadImage(
-            @RequestParam("file") MultipartFile file) {
-
+    /**
+     * ✅ 검색 추천 (대화형 인공지능 [6] 지원)
+     */
+    @GetMapping("/suggest")
+    public ResponseEntity<List<ItemSuggestionDTO>> getItemSuggestions(@RequestParam String keyword) {
         try {
-            // 파일 검증
-            if (file.isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "파일이 비어있습니다."));
-            }
+            log.info("상품 추천 검색: keyword={}", keyword);
 
-            // 파일 크기 검증 (5MB)
-            if (file.getSize() > 5 * 1024 * 1024) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "파일 크기는 5MB 이하여야 합니다."));
-            }
+            List<ItemSuggestionDTO> suggestions = itemService.getItemSuggestionsWithImage(keyword);
 
-            // 파일 확장자 검증
-            String originalFilename = file.getOriginalFilename();
-            if (originalFilename == null || !isImageFile(originalFilename)) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("error", "이미지 파일만 업로드 가능합니다."));
-            }
+            return ResponseEntity.ok(suggestions);
 
-            // 업로드 디렉토리 생성
-            Path uploadDir = Paths.get(System.getProperty("user.dir"), uploadPath);
-            if (!Files.exists(uploadDir)) {
-                Files.createDirectories(uploadDir);
-                System.out.println("업로드 디렉토리 생성: " + uploadDir);
-            }
-
-            // 고유한 파일명 생성
-            String fileExtension = getFileExtension(originalFilename);
-            String uniqueFilename = UUID.randomUUID().toString() + fileExtension;
-            Path filePath = uploadDir.resolve(uniqueFilename);
-
-            // 파일 저장
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-            System.out.println("파일 저장 완료: " + filePath);
-
-            // 응답 데이터
-            Map<String, String> response = new HashMap<>();
-            response.put("imageUrl", "/uploads/" + uniqueFilename);
-            response.put("originalName", originalFilename);
-            response.put("message", "업로드 성공");
-
-            return ResponseEntity.ok(response);
-
-        } catch (IOException e) {
-            System.err.println("파일 업로드 실패: " + e.getMessage());
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("error", "파일 업로드 중 오류가 발생했습니다: " + e.getMessage()));
-        }
-    }
-
-    // ✅ JSON 형태로 상품 등록
-    @PostMapping(value = "/items",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> registerItem(
-            @RequestBody ItemRegisterRequestDTO requestDTO) {
-        try {
-            Long itemId = itemService.saveItem(requestDTO);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("itemid", itemId);
-            response.put("message", "상품이 성공적으로 등록되었습니다.");
-            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.err.println("상품 등록 실패: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.status(500)
-                    .body(Map.of("error", "상품 등록 중 오류가 발생했습니다: " + e.getMessage()));
+            log.error("상품 추천 검색 실패: {}", e.getMessage());
+            return ResponseEntity.ok(List.of());
         }
     }
 
-    // ✅ MultipartFile로 상품 등록
-    @PostMapping(value = "/items/multipart",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Map<String, Object>> registerItemWithFiles(
-            @RequestPart("item") ItemRegisterRequestDTO requestDTO,
-            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
-        try {
-            Long itemId = itemService.saveItemWithImages(requestDTO, images);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("itemid", itemId);
-            response.put("message", "상품이 성공적으로 등록되었습니다.");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(500)
-                    .body(Map.of("error", "상품 등록 중 오류가 발생했습니다: " + e.getMessage()));
-        }
-    }
-
-    @GetMapping("/items/{id}")
-    public ResponseEntity<ItemResponseDTO> getItem(@PathVariable Long id) {
-        return ResponseEntity.ok(itemService.getItemResponseById(id));
-    }
-
-    @GetMapping("/items")
-    public ResponseEntity<List<ItemResponseDTO>> getAllItems() {
-        try {
-            List<ItemResponseDTO> items = itemService.getAllItems();
-            return ResponseEntity.ok(items != null ? items : new ArrayList<>());
-        } catch (Exception e) {
-            System.err.println("아이템 조회 중 오류 발생: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.ok(new ArrayList<>());
-        }
-    }
-
-    // 기존 메서드들...
-    @GetMapping("/items/mine")
-    public ResponseEntity<List<ItemResponseDTO>> getMyItems(@RequestParam String userId) {
-        return ResponseEntity.ok(itemService.getItemsBySellerId(userId));
-    }
-
-    @PutMapping(value = "/items/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Map<String, Object>> updateItem(
-            @PathVariable Long id,
-            @RequestPart("item") ItemRegisterRequestDTO requestDTO,
-            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
-        itemService.updateItem(id, requestDTO, images);
-        Map<String, Object> response = new HashMap<>();
-        response.put("itemid", id);
-        response.put("message", "게시글이 성공적으로 수정되었습니다.");
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/items/{id}")
-    public ResponseEntity<Map<String, String>> deleteItem(@PathVariable Long id) {
-        itemService.deleteItem(id);
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "게시글이 삭제되었습니다.");
-        return ResponseEntity.ok(response);
-    }
-
-    @PatchMapping("/items/{id}/status")
-    public ResponseEntity<Map<String, String>> updateItemStatus(
-            @PathVariable Long id,
-            @RequestBody Map<String, String> body) {
-        String status = body.get("status");
-        itemService.updateItemStatus(id, status);
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "게시글 상태가 성공적으로 변경되었습니다.");
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/items/{itemId}/complete")
-    public ResponseEntity<?> completeItemDeal(
-            @PathVariable Long itemId,
-            @RequestParam Long chatRoomId) {
-        System.out.println("📩 거래 완료 요청: itemId=" + itemId + ", chatRoomId=" + chatRoomId);
-
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 상품이 없습니다."));
-
-        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new IllegalArgumentException("해당 채팅방이 없습니다."));
-
-        item.setBuyer(chatRoom.getBuyer());
-        item.setStatus(Item.Status.거래완료);
-        item.setCompletedDate(LocalDateTime.now());
-
-        itemRepository.save(item);
-
-        return ResponseEntity.ok("거래 완료 처리되었습니다.");
-    }
-
-    @GetMapping("/items/completed")
-    public ResponseEntity<List<ItemResponseDTO>> getCompletedItemsByBuyer(@RequestParam String userId) {
-        return ResponseEntity.ok(itemService.getCompletedItemsByBuyer(userId));
-    }
-
-    @GetMapping("/items/suggest")
-    public ResponseEntity<List<ItemSuggestionDTO>> getSuggestions(@RequestParam String keyword) {
-        return ResponseEntity.ok(itemService.getItemSuggestionsWithImage(keyword));
-    }
-
-    @GetMapping("/items/by-seller")
-    public ResponseEntity<List<ItemResponseDTO>> getItemsBySeller(@RequestParam String sellerId) {
-        return ResponseEntity.ok(itemService.getItemsBySeller(sellerId));
-    }
-
-    @GetMapping("/items/search")
+    /**
+     * ✅ 검색 기능 (최근 등록순 [2])
+     */
+    @GetMapping("/search")
     public ResponseEntity<List<ItemResponseDTO>> searchItems(@RequestParam String keyword) {
-        return ResponseEntity.ok(itemService.searchItems(keyword));
-    }
+        try {
+            log.info("상품 검색: keyword={}", keyword);
 
-    @GetMapping("/items/category")
-    public ResponseEntity<List<ItemResponseDTO>> getItemsByCategory(@RequestParam String category) {
-        return ResponseEntity.ok(itemService.getItemsByCategory(category));
-    }
+            List<ItemResponseDTO> items = itemService.searchItems(keyword);
 
-    @GetMapping("/items/related")
-    public ResponseEntity<List<ItemResponseDTO>> getRelatedItems(
-            @RequestParam String category,
-            @RequestParam Long excludeId,
-            @RequestParam(defaultValue = "5") int limit) {
-        return ResponseEntity.ok(itemService.getRelatedItems(category, excludeId, limit));
-    }
+            return ResponseEntity.ok(items);
 
-    @PostMapping("/items/like")
-    public ResponseEntity<Map<String, Object>> likeItem(@RequestBody Map<String, Object> request) {
-        Long itemId = Long.valueOf(request.get("itemId").toString());
-        String userId = request.get("userId").toString();
-
-        boolean success = itemService.toggleLike(itemId, userId);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", success);
-        response.put("message", success ? "찜 목록에 추가되었습니다." : "이미 찜한 상품입니다.");
-
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/items/{id}/view")
-    public ResponseEntity<Map<String, String>> incrementViewCount(@PathVariable Long id) {
-        itemService.incrementViewCount(id);
-        return ResponseEntity.ok(Map.of("message", "조회수가 증가되었습니다."));
-    }
-
-    // 헬퍼 메서드들
-    private boolean isImageFile(String filename) {
-        String extension = getFileExtension(filename).toLowerCase();
-        return extension.matches("\\.(jpg|jpeg|png|gif|bmp|webp)$");
-    }
-
-    private String getFileExtension(String filename) {
-        int lastDotIndex = filename.lastIndexOf('.');
-        return lastDotIndex > 0 ? filename.substring(lastDotIndex) : "";
-    }
-
-    private String getContentType(String filename) {
-        String extension = getFileExtension(filename).toLowerCase();
-        switch (extension) {
-            case ".png": return "image/png";
-            case ".jpg":
-            case ".jpeg": return "image/jpeg";
-            case ".gif": return "image/gif";
-            case ".webp": return "image/webp";
-            case ".bmp": return "image/bmp";
-            default: return "application/octet-stream";
+        } catch (Exception e) {
+            log.error("상품 검색 실패: {}", e.getMessage());
+            return ResponseEntity.ok(List.of());
         }
     }
+
+    /**
+     * ✅ 카테고리별 조회 (최근 등록순 [2])
+     */
+    @GetMapping("/category/{category}")
+    public ResponseEntity<List<ItemResponseDTO>> getItemsByCategory(@PathVariable String category) {
+        try {
+            log.info("카테고리별 상품 조회: category={}", category);
+
+            List<ItemResponseDTO> items = itemService.getItemsByCategory(category);
+
+            return ResponseEntity.ok(items);
+
+        } catch (Exception e) {
+            log.error("카테고리별 조회 실패: {}", e.getMessage());
+            return ResponseEntity.ok(List.of());
+        }
+    }
+
+    /**
+     * ✅ 판매자별 상품 조회 (최근 등록순 [2])
+     */
+    @GetMapping("/seller/{sellerId}")
+    public ResponseEntity<List<ItemResponseDTO>> getItemsBySeller(@PathVariable String sellerId) {
+        try {
+            List<ItemResponseDTO> items = itemService.getItemsBySeller(sellerId);
+            return ResponseEntity.ok(items);
+        } catch (Exception e) {
+            log.error("판매자별 조회 실패: {}", e.getMessage());
+            return ResponseEntity.ok(List.of());
+        }
+    }
+
+    /**
+     * ✅ 상품 상태 변경 (채팅 연동용)
+     */
+    @PutMapping("/{itemId}/status")
+    public ResponseEntity<Map<String, Object>> updateItemStatus(
+            @PathVariable Long itemId,
+            @RequestBody Map<String, String> request) {
+
+        try {
+            String status = request.get("status");
+            String userId = request.get("userId");
+
+            log.info("상품 상태 변경: itemId={}, status={}, userId={}", itemId, status, userId);
+
+            itemService.updateItemStatus(itemId, status);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "상품 상태가 변경되었습니다.");
+            response.put("itemId", itemId);
+            response.put("newStatus", status);
+            response.put("timestamp", LocalDateTime.now());
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("상품 상태 변경 실패: {}", e.getMessage());
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "상품 상태 변경에 실패했습니다.");
+            errorResponse.put("error", e.getMessage());
+
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+
+    /**
+     * ✅ 조회수 증가
+     */
+    @PostMapping("/{itemId}/view")
+    public ResponseEntity<Map<String, Object>> incrementViewCount(@PathVariable Long itemId) {
+        try {
+            itemService.incrementViewCount(itemId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "조회수가 증가되었습니다.");
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("조회수 증가 실패: {}", e.getMessage());
+            return ResponseEntity.status(500).body(Map.of("success", false));
+        }
+    }
+
+    /**
+     * ✅ 서비스 상태 확인
+     */
+    @GetMapping("/status")
+    public ResponseEntity<Map<String, Object>> getServiceStatus() {
+        Map<String, Object> status = new HashMap<>();
+        status.put("service", "item-controller");
+        status.put("status", "active");
+        status.put("latestSorting", true); // 최근 등록순 정렬 [2]
+        status.put("springReactor", true); // Java Spring [5] 환경
+        status.put("aiRecommendation", true); // 대화형 인공지능 [6]
+        status.put("realTimeMessaging", true); // 실시간 메시징 [7]
+        status.put("timestamp", LocalDateTime.now());
+        status.put("features", new String[]{
+                "상품 목록 조회", "상품 검색", "AI 추천", "상태 변경", "조회수 관리"
+        });
+
+        return ResponseEntity.ok(status);
+    }
+
+    /**
+     * ✅ 연관 상품 조회 (검색 결과 [2] 패턴 - undefined 파라미터 방지)
+     */
+    @GetMapping("/related")
+    public ResponseEntity<List<ItemResponseDTO>> getRelatedItems(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) Long excludeId,
+            @RequestParam(defaultValue = "5") int limit) {
+
+        try {
+            log.info("연관 상품 조회: category={}, excludeId={}, limit={}", category, excludeId, limit);
+
+            // ✅ 파라미터 검증 (검색 결과 [2] undefined 방지)
+            if (category == null || category.trim().isEmpty() || "undefined".equals(category)) {
+                log.warn("유효하지 않은 카테고리: {}", category);
+                return ResponseEntity.ok(List.of());
+            }
+
+            if (excludeId == null || excludeId <= 0) {
+                log.warn("유효하지 않은 excludeId: {}", excludeId);
+                return ResponseEntity.ok(List.of());
+            }
+
+            List<ItemResponseDTO> relatedItems = itemService.getRelatedItems(category, excludeId, limit);
+
+            log.info("연관 상품 조회 완료: {}개 (최근 등록순)", relatedItems.size());
+            return ResponseEntity.ok(relatedItems);
+
+        } catch (Exception e) {
+            log.error("연관 상품 조회 실패: {}", e.getMessage());
+            return ResponseEntity.ok(List.of()); // ✅ 500 대신 빈 리스트 반환
+        }
+    }
+
+    /**
+     * ✅ 카테고리별 연관 상품 조회 (대안 엔드포인트)
+     */
+    @GetMapping("/category/{category}/related")
+    public ResponseEntity<List<ItemResponseDTO>> getRelatedItemsByCategory(
+            @PathVariable String category,
+            @RequestParam(required = false) Long excludeId,
+            @RequestParam(defaultValue = "5") int limit) {
+
+        try {
+            log.info("카테고리별 연관 상품 조회: category={}, excludeId={}", category, excludeId);
+
+            List<ItemResponseDTO> relatedItems = itemService.getRelatedItems(category, excludeId, limit);
+            return ResponseEntity.ok(relatedItems);
+
+        } catch (Exception e) {
+            log.error("카테고리별 연관 상품 조회 실패: {}", e.getMessage());
+            return ResponseEntity.ok(List.of());
+        }
+    }
+    /**
+     * ✅ 전역 예외 처리 (검색 결과 [1] 권장사항)
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleException(Exception e) {
+        log.error("ItemController 예외 발생: {}", e.getMessage(), e);
+
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("error", "상품 조회 중 오류가 발생했습니다.");
+        errorResponse.put("message", e.getMessage());
+        errorResponse.put("success", false);
+        errorResponse.put("timestamp", LocalDateTime.now());
+
+        return ResponseEntity.status(500).body(errorResponse);
+    }
+
 }

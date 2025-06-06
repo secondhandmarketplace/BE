@@ -1,6 +1,6 @@
 package com.kdt.backend.controller;
 
-import com.kdt.backend.dto.MessageDTO;
+import com.kdt.backend.dto.ChatMessageDTO;
 import com.kdt.backend.service.ChatMessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -14,8 +14,8 @@ public class ChatSocketController {
     private final ChatMessageService chatMessageService;
 
     @MessageMapping("/chat.send")
-    public void sendMessage(@Payload MessageDTO messageDTO) {
-        System.out.println("📨 받은 메시지 DTO: " + messageDTO);
-        chatMessageService.sendMessage(messageDTO);
+    public void sendMessage(@Payload ChatMessageDTO chatmessageDTO) {
+        System.out.println("📨 받은 메시지 DTO: " + chatmessageDTO);
+        chatMessageService.sendMessage(chatmessageDTO);
     }
 }

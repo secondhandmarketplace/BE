@@ -1,20 +1,27 @@
 package com.kdt.backend.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class RecommendationCriteria {
-    private String itemName; // 상품명
-    private String category; // 카테고리
-    private BigDecimal minPrice; // 최소 가격
-    private BigDecimal maxPrice; // 최대 가격
-    private String location; // 위치
-    private String sortBy; // 정렬 기준 (예: "price", "rating")
-    private String sortDirection; // 정렬 방향 ("asc" 또는 "desc")
-    private Double minMannerScore; // 최소 매너 점수
-    private Double minRating; // 최소 리뷰 평점
+    private String category;
+    private Integer minPrice;
+    private Integer maxPrice;
+    private String condition;
+    private String sortBy; // "latest", "price", "popular"
+    private Integer limit;
+
+    // 기본값 설정
+    public static RecommendationCriteria defaultCriteria() {
+        return RecommendationCriteria.builder()
+                .sortBy("latest") // 사용자 선호사항: 최근 등록순
+                .limit(10)
+                .build();
+    }
 }

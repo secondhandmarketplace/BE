@@ -42,14 +42,12 @@ dependencies {
 
 	// Lombok
 	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok' // ✅ 핵심: annotation processing
+
 
 	// 개발 툴
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-
-	// 테스트
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
