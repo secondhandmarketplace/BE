@@ -18,13 +18,13 @@ public class UserService {
     /**
      * ✅ 사용자 인증 (평문 비밀번호 비교)
      */
-    public boolean authenticate(String userId, String rawPassword) {
+    public boolean authenticate(String userid, String rawPassword) {
         try {
-            log.info("사용자 인증 시도: userId={}", userId);
+            log.info("사용자 인증 시도: userId={}", userid);
 
-            User user = userRepository.findById(userId).orElse(null);
+            User user = userRepository.findById(userid).orElse(null);
             if (user == null) {
-                log.warn("사용자를 찾을 수 없음: {}", userId);
+                log.warn("사용자를 찾을 수 없음: {}", userid);
                 return false;
             }
 
@@ -38,11 +38,11 @@ public class UserService {
                 matches = rawPassword.equals(user.getPassword());
             }
 
-            log.info("사용자 인증 결과: userId={}, success={}", userId, matches);
+            log.info("사용자 인증 결과: userId={}, success={}", userid, matches);
             return matches;
 
         } catch (Exception e) {
-            log.error("사용자 인증 중 오류: userId={}, error={}", userId, e.getMessage());
+            log.error("사용자 인증 중 오류: userId={}, error={}", userid, e.getMessage());
             return false;
         }
     }
@@ -50,10 +50,10 @@ public class UserService {
     /**
      * ✅ 사용자 존재 확인
      */
-    public boolean existsById(String userId) {
+    public boolean existsByUserid(String userid) {
         try {
-            boolean exists = userRepository.existsById(userId);
-            log.info("사용자 존재 확인: userId={}, exists={}", userId, exists);
+            boolean exists = userRepository.existsByUserid(userid);
+            log.info("사용자 존재 확인: userId={}, exists={}", userid, exists);
             return exists;
         } catch (Exception e) {
             log.error("사용자 존재 확인 중 오류: {}", e.getMessage());
@@ -64,9 +64,9 @@ public class UserService {
     /**
      * ✅ 사용자 조회
      */
-    public User findById(String userId) {
+    public User findById(String userid) {
         try {
-            return userRepository.findById(userId).orElse(null);
+            return userRepository.findById(userid).orElse(null);
         } catch (Exception e) {
             log.error("사용자 조회 중 오류: {}", e.getMessage());
             return null;
@@ -78,5 +78,26 @@ public class UserService {
      */
     public String encodePassword(String rawPassword) {
         return passwordEncoder.encode(rawPassword);
+    }
+
+    public boolean existsByEmail(String email) {
+        try {
+            boolean exists = userRepository.existsByEmail(email);
+            log.info("이메일 존재 확인: email={}, exists={}", email, exists);
+            return exists;
+        } catch (Exception e) {
+            log.error("이메일 존재 확인 중 오류: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    public void save(User newUser) {
+        try {
+            userRepository.save(newUser);
+            log.info("사용자 저장 성공: userId={}", newUser.getUserid());
+        } catch (Exception e) {
+            log.error("사용자 저장 중 오류: {}", e.getMessage());
+            throw e; // 예외를 다시 던져서 호출자에게 알림
+        }
     }
 }

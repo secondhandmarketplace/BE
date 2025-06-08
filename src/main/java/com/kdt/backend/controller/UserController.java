@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/auth")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")
 @RequiredArgsConstructor
 @Slf4j
@@ -21,32 +21,31 @@ public class UserController {
     private final UserService userService;
 
 
-
     /**
      * ✅ 사용자 존재 확인 (검색 결과 [1] 참조 - 명확한 경로 지정)
      */
-    @GetMapping("/check/{userId}")  // ✅ 명확한 경로 지정
-    public ResponseEntity<Map<String, Object>> checkUserExists(@PathVariable String userId) {
+    @GetMapping("/check-userid/{userid}")  // ✅ 명확한 경로 지정
+    public ResponseEntity<Map<String, Object>> checkUserExists(@PathVariable String userid) {
         try {
-            log.info("사용자 존재 확인 요청: userId={}", userId);
+            log.info("사용자 존재 확인 요청: userid={}", userid);
 
-            boolean exists = userService.existsById(userId);
+            boolean exists = userService.existsByUserid(userid);
 
             Map<String, Object> response = new HashMap<>();
             response.put("exists", exists);
-            response.put("userId", userId);
+            response.put("userId", userid);
             response.put("timestamp", LocalDateTime.now());
             response.put("success", true);
 
-            log.info("사용자 존재 확인 완료: userId={}, exists={}", userId, exists);
+            log.info("사용자 존재 확인 완료: userId={}, exists={}", userid, exists);
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
-            log.error("사용자 존재 확인 실패: userId={}, error={}", userId, e.getMessage());
+            log.error("사용자 존재 확인 실패: userId={}, error={}", userid, e.getMessage());
 
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("exists", false);
-            errorResponse.put("userId", userId);
+            errorResponse.put("userId", userid);
             errorResponse.put("error", e.getMessage());
             errorResponse.put("success", false);
             errorResponse.put("timestamp", LocalDateTime.now());
@@ -56,19 +55,110 @@ public class UserController {
     }
 
     /**
+     * ✅ 이메일 중복 확인
+     */
+    @GetMapping("/check-email/{email}")
+    public ResponseEntity<Map<String, Object>> checkEmailExists(@PathVariable String email) {
+        try {
+            log.info("이메일 중복 확인 요청: email={}", email);
+
+            boolean exists = userService.existsByEmail(email);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("exists", exists);
+            response.put("email", email);
+            response.put("timestamp", LocalDateTime.now());
+            response.put("success", true);
+
+            log.info("이메일 중복 확인 완료: email={}, exists={}", email, exists);
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            log.error("이메일 중복 확인 실패: email={}, error={}", email, e.getMessage());
+
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("exists", false);
+            errorResponse.put("email", email);
+            errorResponse.put("error", e.getMessage());
+            errorResponse.put("success", false);
+            errorResponse.put("timestamp", LocalDateTime.now());
+
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+
+    @PostMapping("/signup")
+    public ResponseEntity<Map<String, Object>> signup(@RequestBody Map<String, String> signupRequest) {
+        try {
+            String userid = signupRequest.get("userid");
+            String name = signupRequest.get("name");
+            String email = signupRequest.get("email");
+            String phone = signupRequest.get("phone");
+            String password = signupRequest.get("password");
+
+            log.info("회원가입 요청: userId={}, email={}", userid, email);
+
+            // 중복 확인
+            if (userService.existsByUserid(userid)) {
+                return ResponseEntity.status(409).body(Map.of(
+                        "success", false,
+                        "message", "이미 존재하는 아이디입니다."
+                ));
+            }
+
+            if (userService.existsByEmail(email)) {
+                return ResponseEntity.status(409).body(Map.of(
+                        "success", false,
+                        "message", "이미 존재하는 이메일입니다."
+                ));
+            }
+
+            // 비밀번호 암호화
+            String encodedPassword = userService.encodePassword(password);
+
+            // 사용자 생성
+            User newUser = User.builder()
+                    .userid(userid)
+                    .name(name)
+                    .email(email)
+                    .phone(phone)
+                    .password(encodedPassword)
+                    .status("active")
+                    .mannerScore(5.0)
+                    .build();
+
+            userService.save(newUser);
+
+            log.info("회원가입 성공: userId={}", userid);
+
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "회원가입이 완료되었습니다."
+            ));
+        } catch (Exception e) {
+            log.error("회원가입 실패: {}", e.getMessage());
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "회원가입 처리 중 오류가 발생했습니다.",
+                    "error", e.getMessage()
+            ));
+        }
+    }
+
+    /**
      * ✅ 사용자 정보 조회 (검색 결과 [1] 참조 - 경로 충돌 방지)
      */
-    @GetMapping("/profile/{userId}")  // ✅ /check와 구분되는 명확한 경로
-    public ResponseEntity<Map<String, Object>> getUserProfile(@PathVariable String userId) {
+    @GetMapping("/profile/{userid}")  // ✅ /check와 구분되는 명확한 경로
+    public ResponseEntity<Map<String, Object>> getUserProfile(@PathVariable String userid) {
         try {
-            log.info("사용자 프로필 조회: userId={}", userId);
+            log.info("사용자 프로필 조회: userId={}", userid);
 
-            User user = userService.findById(userId);
+            User user = userService.findById(userid);
             if (user == null) {
                 Map<String, Object> notFoundResponse = new HashMap<>();
                 notFoundResponse.put("found", false);
                 notFoundResponse.put("message", "사용자를 찾을 수 없습니다.");
-                notFoundResponse.put("userId", userId);
+                notFoundResponse.put("userId", userid);
 
                 return ResponseEntity.status(404).body(notFoundResponse);
             }
@@ -92,30 +182,30 @@ public class UserController {
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> loginRequest) {
         try {
-            String userId = loginRequest.get("userId");
+            String userid = loginRequest.get("userid");
             String password = loginRequest.get("password");
 
-            log.info("로그인 시도: userId={}", userId);
+            log.info("로그인 시도: userId={}", userid);
 
             // ✅ 사용자 인증
-            boolean authenticated = userService.authenticate(userId, password);
+            boolean authenticated = userService.authenticate(userid, password);
 
             if (authenticated) {
                 // ✅ 사용자 정보 조회
-                User user = userService.findById(userId);
+                User user = userService.findById(userid);
 
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", true);
-                response.put("userId", userId); // ✅ 검색 결과 [4] 패턴: userId 명시적 포함
-                response.put("userName", user != null ? user.getName() : userId);
+                response.put("userId", userid); // ✅ 검색 결과 [4] 패턴: userId 명시적 포함
+                response.put("userName", user != null ? user.getName() : userid);
                 response.put("message", "로그인 성공");
                 response.put("timestamp", LocalDateTime.now());
 
                 // ✅ JWT 토큰 생성 (필요시)
-                String token = generateToken(userId);
+                String token = generateToken(userid);
                 response.put("token", token);
 
-                log.info("로그인 성공: userId={}", userId);
+                log.info("로그인 성공: userId={}", userid);
                 return ResponseEntity.ok(response);
             } else {
                 Map<String, Object> response = new HashMap<>();
