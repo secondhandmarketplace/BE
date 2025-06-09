@@ -1,0 +1,53 @@
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background-color: #a0c4ff;
+  border-bottom: 1px solid #e9ecef;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 50px;
+}
+
+.header-container h1 {
+  color: #fff;
+  font-size: 18px;
+}
+
+.header-container a {
+  text-decoration: none;
+}
+
+.header-search {
+  display: flex;
+
+  align-items: center;
+}
+
+.search-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background-color: #a0c4ff;
+}
+
+.header-container .header-search .search-button svg {
+  font-size: 25px;
+}
+
+.search-button:hover {
+  color: aqua;
+}
+
+.search-button svg {
+  font-size: 18px;
+  color: #ffffff;
+}

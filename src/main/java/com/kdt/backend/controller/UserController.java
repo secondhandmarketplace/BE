@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")
 @RequiredArgsConstructor
 @Slf4j
@@ -24,7 +24,7 @@ public class UserController {
     /**
      * ✅ 사용자 존재 확인 (검색 결과 [1] 참조 - 명확한 경로 지정)
      */
-    @GetMapping("/check-userid/{userid}")  // ✅ 명확한 경로 지정
+    @GetMapping("/auth/check/userid/{userid}")  // ✅ 명확한 경로 지정
     public ResponseEntity<Map<String, Object>> checkUserExists(@PathVariable String userid) {
         try {
             log.info("사용자 존재 확인 요청: userid={}", userid);
@@ -54,10 +54,11 @@ public class UserController {
         }
     }
 
+
     /**
      * ✅ 이메일 중복 확인
      */
-    @GetMapping("/check-email/{email}")
+    @GetMapping("/auth/check-email/{email}")
     public ResponseEntity<Map<String, Object>> checkEmailExists(@PathVariable String email) {
         try {
             log.info("이메일 중복 확인 요청: email={}", email);
@@ -87,7 +88,7 @@ public class UserController {
         }
     }
 
-    @PostMapping("/signup")
+    @PostMapping("/auth/signup")
     public ResponseEntity<Map<String, Object>> signup(@RequestBody Map<String, String> signupRequest) {
         try {
             String userid = signupRequest.get("userid");
@@ -145,10 +146,14 @@ public class UserController {
         }
     }
 
+    //TODO : 로그인 버튼 클릭 시 사용자 인증 로직 구현
+
+
+
     /**
-     * ✅ 사용자 정보 조회 (검색 결과 [1] 참조 - 경로 충돌 방지)
+     * ✅ 사용자 정보 조회 ->loginPage.jsx (56번줄)에서 사용
      */
-    @GetMapping("/profile/{userid}")  // ✅ /check와 구분되는 명확한 경로
+    @GetMapping("/users/check/${userid}")  // ✅ /check와 구분되는 명확한 경로
     public ResponseEntity<Map<String, Object>> getUserProfile(@PathVariable String userid) {
         try {
             log.info("사용자 프로필 조회: userId={}", userid);
@@ -179,7 +184,7 @@ public class UserController {
     /**
      * ✅ 로그인 처리 (검색 결과 [4] 참조 - userId 응답에 포함)
      */
-    @PostMapping("/login")
+    @PostMapping("/users/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> loginRequest) {
         try {
             String userid = loginRequest.get("userid");

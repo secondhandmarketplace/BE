@@ -1,0 +1,194 @@
+.registerContainer {
+  display: flex;
+  flex-direction: column;
+  width: 80%;
+  margin: 60px auto 0 auto;
+  padding: 16px 4vw 16px 4vw;
+  box-sizing: border-box;
+  background: #fff;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.registerContainer input,
+.registerContainer textarea {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.registerContainer input {
+  height: 42px;
+  border: 1px solid #a0c4ff;
+  border-radius: 8px;
+  text-indent: 10px;
+  background: #f8faff;
+}
+
+.registerContainer input[type="number"]::-webkit-inner-spin-button,
+.registerContainer input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.imageContainer {
+  /* border: 1px solid #a0c4ff; */
+  border-radius: 10px;
+  padding: 8px 0 8px 0;
+  width: 100%;
+  min-height: 80px;
+  margin: 0 auto 18px auto;
+  background: #f8faff;
+  overflow-x: auto;
+}
+
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px; /* 모바일 기준 */
+  cursor: pointer;
+}
+
+.imageBox {
+  display: flex;
+  position: relative;
+  width: 90%;
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  border: 1px solid #a0c4ff;
+  background-color: rgba(160, 196, 255, 0.09);
+  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.imageBox img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.removeBtn {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background-color: #ff0099;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 14px;
+  top: 4px;
+  right: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.addIcon {
+  font-size: 28px;
+  color: #a0c4ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imageCount {
+  font-size: 13px;
+  color: #666;
+  text-align: right;
+  margin-top: 8px;
+}
+
+.label {
+  font-size: 15px;
+  margin-bottom: 6px;
+  margin-top: 8px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.required {
+  color: red;
+  margin-right: 3px;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 110px;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 15px;
+  border: 1px solid #a0c4ff;
+  background: #f8faff;
+  resize: none;
+  outline: none;
+  margin-bottom: 14px;
+}
+
+.warning {
+  color: red;
+  font-size: 13px;
+  margin: -8px 0 8px 0;
+}
+
+.registerButton {
+  background: #a0c4ff;
+  border: 1px solid #a0c4ff;
+  height: 44px; /* 모바일 기준 */
+  width: 100%;
+  font-size: 15px; /* 모바일 기준 */
+  color: white;
+  border-radius: 10px;
+  cursor: pointer;
+  margin: 12px 0 10px 0;
+  transition: background 0.2s;
+}
+
+.registerButton:active {
+  background: #5390d9;
+}
+
+.condition-box {
+  background: #f8faff;
+  border: 1px solid #a0c4ff;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  width: 100%;
+  padding: 10px;
+}
+
+.radio-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.radio-btn input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  border: 1px solid #a0c4ff;
+  border-radius: 50%;
+  cursor: pointer;
+  outline: none;
+  background: white;
+  margin: 0 10px;
+}
+
+.radio-btn input[type="radio"]:checked {
+  box-shadow: 0 0 0 1px #3399ff;
+  background: #3399ff;
+  border: 3px solid #fff;
+  border-radius: 50%;
+}

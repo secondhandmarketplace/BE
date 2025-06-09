@@ -1,0 +1,285 @@
+.container {
+  display: flex;
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+.chatList {
+  display: flex;
+  height: 580px;
+  width: 100%;
+  margin-top: 75px;
+  overflow-y: auto;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.chatListHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: #fff;
+  border-bottom: 2px solid #f0f0f0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.chatListTitle {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.chatRoom {
+  display: flex;
+  background: #f4f4f4;
+  border-bottom: #919191 solid 1px;
+  border-top: #919191 solid 1px;
+  gap: 20px;
+  max-height: 100px;
+  flex-direction: row;
+  padding: 10px 10px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.chatRoom:hover {
+  background: #bcbcbc;
+}
+
+.mainImage {
+  background: #ed2800;
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 15px;
+  flex-shrink: 0;
+}
+
+.chatBox {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-indent: 10px;
+  max-width: 200px;
+  min-width: 0;
+}
+
+.chatRoomInfo {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+
+.userName {
+  display: flex;
+  color: #000000;
+  font-size: 16px;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemTitle {
+  font-size: 12px;
+  color: #666;
+  background: #e8f4fd;
+  padding: 2px 6px;
+  border-radius: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.lastMessage {
+  background: none;
+  display: flex;
+  font-size: 14px;
+  color: #919191;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 3px;
+}
+
+.itemPrice {
+  font-size: 12px;
+  color: #ff6f0f;
+  font-weight: bold;
+}
+
+.chatRoomMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  min-width: 70px;
+}
+
+.time {
+  background: none;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #919191;
+  margin-bottom: 5px;
+}
+
+.unreadBadge {
+  background: #ff4757;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: bold;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 5px;
+}
+
+.deleteButton {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  width: 100px;
+  height: 20px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.deleteButton:hover {
+  background: #ff5252;
+}
+
+.emptyMessage {
+  text-align: center;
+  color: #999;
+  font-size: 16px;
+  padding: 60px 20px;
+  background: #f9f9f9;
+  margin: 20px;
+  border-radius: 10px;
+}
+
+.loading {
+  text-align: center;
+  color: #666;
+  font-size: 16px;
+  padding: 60px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+}
+
+.error {
+  background: #ffe6e6;
+  color: #d63031;
+  padding: 15px;
+  margin: 10px 15px;
+  border-radius: 8px;
+  border-left: 4px solid #d63031;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.retryButton {
+  background: #ff6f0f;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.retryButton:hover {
+  background: #e55a00;
+}
+
+/* 스크롤바 스타일링 */
+.chatList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chatList::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.chatList::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.chatList::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 600px) {
+  .chatList {
+    margin-top: 60px;
+    height: calc(100vh - 120px);
+  }
+
+  .chatRoom {
+    padding: 8px;
+    gap: 15px;
+  }
+
+  .mainImage {
+    width: 60px;
+    height: 60px;
+  }
+
+  .chatBox {
+    max-width: 150px;
+    text-indent: 5px;
+  }
+
+  .userName {
+    font-size: 14px;
+  }
+
+  .lastMessage {
+    font-size: 13px;
+  }
+
+  .time {
+    font-size: 11px;
+  }
+
+  .itemTitle {
+    font-size: 11px;
+    max-width: 100px;
+  }
+
+  .chatRoomMeta {
+    min-width: 60px;
+  }
+
+  .deleteButton {
+    width: 100px;
+    height: 18px;
+    font-size: 12px;
+  }
+}

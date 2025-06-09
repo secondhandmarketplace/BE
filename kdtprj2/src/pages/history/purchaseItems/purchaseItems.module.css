@@ -1,0 +1,35 @@
+.container {
+  position: relative;
+  /*display: flex;*/
+  width: 100%;
+  height: 100vh;
+}
+
+.purchase-box {
+  background: white;
+  width: 100%;
+  position: absolute;
+  top: 50px;
+  left: 0;
+  right: 0;
+  bottom: 60px; /* Footer 높이 */
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  /*gap: 16px;*/
+}
+
+.purchase-items {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.empty {
+  text-align: center;
+  color: #999;
+  font-size: 16px;
+  padding: 40px 0;
+}

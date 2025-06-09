@@ -1,0 +1,40 @@
+.messageBubble {
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 14px;
+    max-width: 30%;
+    word-break: break-word;
+}
+
+.time {
+    font-size: 0.75rem;
+    color: #000000;
+    white-space: nowrap;
+}
+
+.myRow {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin: 8px 0;
+}
+
+.otherRow {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin: 8px 0;
+}
+
+.myMessage {
+    background: #1183ff;
+    text-align: right;
+    color: white;
+    margin-left: 8px;
+}
+
+.otherMessage {
+    margin-right: 8px;
+    background: #e5e7eb;
+    text-align: left;
+}

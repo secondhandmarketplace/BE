@@ -1,0 +1,105 @@
+.container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: #1a1a1a solid 1px;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.statusBox {
+  height: 70px;
+  margin-top: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin-bottom: 30px;
+  width: 100%;
+  position: relative;
+  background: #fff;
+}
+
+.onSale,
+.complete {
+  position: static; /* absolute 제거 */
+  width: 140px;
+  min-width: 90px;
+  max-width: 45vw;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: #1a1a1a solid 1.5px;
+  border-radius: 18px;
+  background: #f8faff;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  margin: 0 6px;
+  outline: none;
+  white-space: nowrap;
+}
+
+.active {
+  background-color: #a0c4ff !important;
+  color: #fff !important;
+  border-bottom: #a0c4ff solid 2.5px;
+}
+
+.itemsBox {
+  display: flex;
+  overflow-y: auto;
+  flex-direction: column;
+  gap: 10px;
+  height: 530px;
+  margin-bottom: 63px;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.btnRow {
+  position: absolute;
+  display: flex;
+  width: 25px;
+  height: 25px;
+  right: 150px;
+  bottom: 10px;
+  gap: 5px;
+
+  button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+    text-align: center;
+    border: #1a1a1a solid 1px;
+  }
+}
+
+.empty {
+  text-align: center;
+  color: #999;
+  font-size: 16px;
+  padding: 40px 0;
+}
+
+.active {
+  background-color: #ff7474;
+}
+
+.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+  cursor: default;
+}

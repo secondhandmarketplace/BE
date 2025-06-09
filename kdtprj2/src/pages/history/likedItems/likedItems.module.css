@@ -1,0 +1,62 @@
+.container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  overflow: hidden;
+}
+
+.footer {
+  position: absolute;
+
+  z-index: 100;
+}
+
+/* 헤더 높이: 60px, 푸터 높이: 60px 기준 */
+.likedBox {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 60px; /* Footer 높이 */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 0 10px 0;
+  background: #fff;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.likedItem {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+  height: 100px;
+  width: 100%;
+  gap: 7px;
+}
+
+.unlikeBtn {
+  background: #ffcf09;
+  min-width: 50px;
+  min-height: 50px;
+}
+
+/* .empty {
+  text-align: center;
+  color: #999;
+  font-size: 16px;
+  padding: 40px 0;
+} */

@@ -16,7 +16,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder; // ✅ PasswordEncoder 주입
 
     /**
-     * ✅ 사용자 인증 (평문 비밀번호 비교)
+     * ✅ 사용자 인증 (평문 비밀번호 비교) -> 로그인 시 사용
      */
     public boolean authenticate(String userid, String rawPassword) {
         try {
