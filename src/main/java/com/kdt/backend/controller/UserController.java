@@ -153,7 +153,7 @@ public class UserController {
     /**
      * ✅ 사용자 정보 조회 ->loginPage.jsx (56번줄)에서 사용
      */
-    @GetMapping("/users/check/${userid}")  // ✅ /check와 구분되는 명확한 경로
+    @GetMapping("/users/check/{userid}")  // ✅ /check와 구분되는 명확한 경로
     public ResponseEntity<Map<String, Object>> getUserProfile(@PathVariable String userid) {
         try {
             log.info("사용자 프로필 조회: userId={}", userid);
