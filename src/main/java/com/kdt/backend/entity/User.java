@@ -1,5 +1,6 @@
 package com.kdt.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
@@ -11,11 +12,9 @@ import java.util.List;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(nullable = false, unique = true)
+    private String userid; // 기본키(PK), 사용자 아이디
 
-    @Column(nullable = false)
-    private String userid;
 
     private String name;
 
@@ -33,6 +32,7 @@ public class User {
 
     // 연관 관계
     @OneToMany(mappedBy = "seller")
+    @JsonBackReference
     private List<Item> sellingItems;
 
     @OneToMany(mappedBy = "buyer")

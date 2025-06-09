@@ -58,7 +58,7 @@ public class ItemResponseDTO {
                 .viewCount(item.getViewCount())
                 .meetLocation(item.getMeetLocation())
                 .thumbnail(item.getThumbnail())
-                .tags(List.of()) // 기본값
+                .tags(item.getTags())
                 .build();
     }
 

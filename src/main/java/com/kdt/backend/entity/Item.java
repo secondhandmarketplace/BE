@@ -1,5 +1,6 @@
 package com.kdt.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -22,6 +23,7 @@ public class Item {
     private Long itemid;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @JsonBackReference
     @JoinColumn(name = "seller_userid", referencedColumnName = "userid", nullable = false)
     private User seller;
 
