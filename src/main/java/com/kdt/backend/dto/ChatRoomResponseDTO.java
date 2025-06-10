@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
 public class ChatRoomResponseDTO {
     private Long id; // ✅ Long 타입 유지
     private Long roomId; // ✅ Long 타입 유지
-    private String nickname;
-    private String otherUserName;
+    private String nickname; // 채팅방 생성자의 이름
+    private String otherUserName; // 상대방 사용자 이름
     private String lastMessage;
     private LocalDateTime lastTimestamp;
     private LocalDateTime updatedAt;
@@ -27,20 +27,5 @@ public class ChatRoomResponseDTO {
     private Integer unreadCount;
     private String otherUserId;
     private String status;
-
-    // ✅ 레거시 생성자 (호환성 유지)
-    public ChatRoomResponseDTO(Long chatroomId, Long itemId, String itemTitle,
-                               String buyerId, String buyerUsername, String sellerUsername,
-                               String sellerId, Long createdAt, String latestMessage) {
-        this.id = chatroomId;
-        this.roomId = chatroomId;
-        this.itemId = itemId;
-        this.itemTitle = itemTitle;
-        this.otherUserId = sellerId;
-        this.nickname = sellerUsername;
-        this.otherUserName = sellerUsername;
-        this.lastMessage = latestMessage;
-        this.status = "active";
-        this.unreadCount = 0;
-    }
+    private String sellerId; // ✅ 판매자 아이디 필드 추가
 }

@@ -15,7 +15,6 @@ public class User {
     @Column(nullable = false, unique = true)
     private String userid; // 기본키(PK), 사용자 아이디
 
-
     private String name;
 
     @Column(nullable = false, unique = true)

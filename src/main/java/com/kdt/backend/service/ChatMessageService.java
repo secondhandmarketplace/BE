@@ -31,7 +31,7 @@ public class ChatMessageService {
     /**
      * ✅ 메시지 전송 (최근 등록순 정렬 [3] 반영)
      */
-    public ChatMessageDTO sendMessage(ChatMessageDTO dto) {
+    public ChatMessageDTO sendMessage(ChatMessageDTO  dto) {
         try {
             log.info("메시지 전송 시작: roomId={}, senderId={}", dto.getChatRoomId(), dto.getSenderId());
 

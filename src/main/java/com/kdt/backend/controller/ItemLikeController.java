@@ -11,20 +11,20 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/likes")
+@RequestMapping("/api/items/like")
 public class ItemLikeController {
 
     private final ItemLikeService itemLikeService;
 
     @PostMapping("/{itemId}")
-    public ResponseEntity<Void> like(@PathVariable Long itemId, @RequestParam String userId) {
-        itemLikeService.likeItem(itemId, userId);
+    public ResponseEntity<Void> like(@PathVariable Long itemId, @RequestParam String userid) {
+        itemLikeService.likeItem(itemId, userid);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/{itemId}")
-    public ResponseEntity<Void> unlike(@PathVariable Long itemId, @RequestParam String userId) {
-        itemLikeService.unlikeItem(itemId, userId);
+    public ResponseEntity<Void> unlike(@PathVariable Long itemId, @RequestParam String userid) {
+        itemLikeService.unlikeItem(itemId, userid);
         return ResponseEntity.ok().build();
     }
 
@@ -34,13 +34,13 @@ public class ItemLikeController {
     }
 
     @GetMapping("/{itemId}/is-liked")
-    public ResponseEntity<Boolean> isLiked(@PathVariable Long itemId, @RequestParam String userId) {
-        return ResponseEntity.ok(itemLikeService.isLiked(itemId, userId));
+    public ResponseEntity<Boolean> isLiked(@PathVariable Long itemId, @RequestParam String userid) {
+        return ResponseEntity.ok(itemLikeService.isLiked(itemId, userid));
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<FavoriteItemDTO>> myFavorites(@RequestParam String userId) {
-        return ResponseEntity.ok(itemLikeService.getUserFavorites(userId));
+    public ResponseEntity<List<FavoriteItemDTO>> myFavorites(@RequestParam String userid) {
+        return ResponseEntity.ok(itemLikeService.getUserFavorites(userid));
     }
 
 }

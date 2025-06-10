@@ -65,7 +65,7 @@ public class ItemController {
     /**
      * ✅ 특정 아이템 조회 (판매자 정보 포함)
      */
-    @GetMapping("/{itemId}")
+    @GetMapping("/{itemId}") // -> 특정 room 에 등록된 아이템 id 를 통해 유저 id 를 조회
     public ResponseEntity<ItemResponseDTO> getItemById(@PathVariable Long itemId) {
         try {
             ItemResponseDTO item = itemService.getItemResponseById(itemId);

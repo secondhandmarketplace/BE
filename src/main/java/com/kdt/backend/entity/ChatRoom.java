@@ -23,7 +23,8 @@ public class ChatRoom {
     private Item item;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "seller_userid", nullable = false)
+    @JoinColumn(name = "seller_userid",
+    referencedColumnName = "userid", nullable = false)
     private User seller;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -147,5 +148,10 @@ public class ChatRoom {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public String getNickName() {
+        // 채팅방 생성자의 이름 반환
+        return this.buyer != null ? this.buyer.getName() : "알 수 없음";
     }
 }

@@ -35,17 +35,17 @@ public class ChatService {
     /**
      * ✅ 채팅방 생성 (Java Spring [4] 환경 + 실시간 메시징 [1] 지원)
      */
-    public ChatRoomResponseDTO createChatRoom(String userId, String otherUserId, Long itemId) {
+    public ChatRoomResponseDTO createChatRoom(String userid, String otherUserId, Long itemId) {
         try {
-            log.info("채팅방 생성 서비스: userId={}, otherUserId={}, itemId={}", userId, otherUserId, itemId);
+            log.info("채팅방 생성 서비스: userid={}, otherUserId={}, itemId={}", userid, otherUserId, itemId);
 
             // ✅ 엔티티 조회 및 검증
             Item item = itemRepository.findById(itemId)
                     .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다: " + itemId));
 
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + userId));
-            User otherUser = userRepository.findById(otherUserId)
+            User user = userRepository.findByUserid(userid)
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + userid));
+            User otherUser = userRepository.findByUserid(otherUserId)
                     .orElseThrow(() -> new RuntimeException("상대방을 찾을 수 없습니다: " + otherUserId));
 
             // ✅ 기존 채팅방 확인 (양방향 검색)
@@ -54,7 +54,7 @@ public class ChatService {
 
             if (existingRoom != null) {
                 log.info("기존 채팅방 반환: roomId={}", existingRoom.getId());
-                return convertToChatRoomResponseDTO(existingRoom, userId);
+                return convertToChatRoomResponseDTO(existingRoom, userid);
             }
 
             // ✅ 새 채팅방 생성 (최근 등록순 [3] 반영)
@@ -73,7 +73,7 @@ public class ChatService {
             log.info("새 채팅방 생성 완료: roomId={}", savedRoom.getId());
 
             // ✅ 실시간 알림 전송 (실시간 메시징 [1] 지원)
-            ChatRoomResponseDTO responseDTO = convertToChatRoomResponseDTO(savedRoom, userId);
+            ChatRoomResponseDTO responseDTO = convertToChatRoomResponseDTO(savedRoom, userid);
             messagingTemplate.convertAndSend("/topic/chatroom/" + otherUserId, responseDTO);
 
             return responseDTO;
@@ -87,26 +87,26 @@ public class ChatService {
     /**
      * ✅ 사용자별 채팅방 목록 조회 (최근 등록순 [3] 정렬)
      */
-    public List<ChatRoomResponseDTO> getChatRoomsByUserId(String userId) {
+    public List<ChatRoomResponseDTO> getChatRoomsByUserId(String userid) {
         try {
-            log.info("채팅방 목록 조회: userId={}", userId);
+            log.info("채팅방 목록 조회: userid={}", userid);
 
-            if (userId == null || userId.trim().isEmpty()) {
+            if (userid == null || userid.trim().isEmpty()) {
                 return List.of();
             }
 
             // ✅ 사용자 존재 확인
-            boolean userExists = userRepository.existsById(userId);
+            boolean userExists = userRepository.existsById(userid);
             if (!userExists) {
-                log.warn("존재하지 않는 사용자: {}", userId);
+                log.warn("존재하지 않는 사용자: {}", userid);
                 return List.of();
             }
 
             // ✅ 최근 등록순으로 정렬 (사용자 선호사항 [3])
-            List<ChatRoom> chatRooms = chatRoomRepository.findByBuyer_UseridOrSeller_UseridOrderByUpdatedAtDesc(userId, userId);
+            List<ChatRoom> chatRooms = chatRoomRepository.findByBuyer_UseridOrSeller_UseridOrderByUpdatedAtDesc(userid, userid);
 
             List<ChatRoomResponseDTO> result = chatRooms.stream()
-                    .map(room -> convertToChatRoomResponseDTO(room, userId))
+                    .map(room -> convertToChatRoomResponseDTO(room, userid))
                     .filter(dto -> dto != null)
                     .collect(Collectors.toList());
 
@@ -114,7 +114,7 @@ public class ChatService {
             return result;
 
         } catch (Exception e) {
-            log.error("채팅방 목록 조회 실패: userId={}, error={}", userId, e.getMessage(), e);
+            log.error("채팅방 목록 조회 실패: userid={}, error={}", userid, e.getMessage(), e);
             return List.of();
         }
     }
@@ -193,10 +193,10 @@ public class ChatService {
     /**
      * ✅ 읽음 처리 (실시간 메시징 [1] 지원)
      */
-    public boolean markMessagesAsRead(Long roomId, String userId) {
+    public boolean markMessagesAsRead(Long roomId, String userid) {
         try {
             List<ChatMessage> unreadMessages = chatMessageRepository
-                    .findUnreadMessagesByRoomAndUser(roomId, userId);
+                    .findUnreadMessagesByRoomAndUser(roomId, userid);
 
             unreadMessages.forEach(message -> message.setIsRead(true));
             chatMessageRepository.saveAll(unreadMessages);
@@ -220,14 +220,14 @@ public class ChatService {
     /**
      * ✅ 채팅방 삭제
      */
-    public boolean deleteChatRoom(Long roomId, String userId) {
+    public boolean deleteChatRoom(Long roomId, String userid) {
         try {
             ChatRoom chatRoom = chatRoomRepository.findById(roomId)
                     .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
 
             // ✅ 권한 확인
-            if (!chatRoom.getBuyer().getUserid().equals(userId) &&
-                    !chatRoom.getSeller().getUserid().equals(userId)) {
+            if (!chatRoom.getBuyer().getUserid().equals(userid) &&
+                    !chatRoom.getSeller().getUserid().equals(userid)) {
                 throw new RuntimeException("채팅방 삭제 권한이 없습니다.");
             }
 

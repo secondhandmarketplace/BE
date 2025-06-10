@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/chat-rooms")
+@RequestMapping("/api/chat/rooms")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")
 @RequiredArgsConstructor
 @Slf4j
@@ -50,12 +50,12 @@ public class ChatRoomController {
      * ✅ 사용자별 채팅방 목록 조회 (최근 등록순 [3] 반영)
      */
     @GetMapping
-    public ResponseEntity<List<ChatRoomResponseDTO>> getChatRoomsByUser(@RequestParam String userId) {
+    public ResponseEntity<List<ChatRoomResponseDTO>> getChatRoomsByUser(@RequestParam String userid) {
         try {
-            log.info("채팅방 목록 조회: userId={}", userId);
+            log.info("채팅방 목록 조회: userid={}", userid);
 
             // ✅ 최근 등록순으로 정렬된 결과 반환 [3]
-            List<ChatRoomResponseDTO> result = chatRoomService.getChatRoomsByUser(userId);
+            List<ChatRoomResponseDTO> result = chatRoomService.getChatRoomsByUser(userid);
 
             log.info("채팅방 목록 조회 완료: {}개 (최근 등록순)", result.size());
             return ResponseEntity.ok(result);
@@ -91,15 +91,15 @@ public class ChatRoomController {
     @DeleteMapping("/{chatRoomId}")
     public ResponseEntity<Map<String, Object>> deleteChatRoom(
             @PathVariable Long chatRoomId,
-            @RequestParam(required = false) String userId) {
+            @RequestParam(required = false) String userid) {
 
         try {
-            log.info("채팅방 삭제 요청: chatRoomId={}, userId={}", chatRoomId, userId);
+            log.info("채팅방 삭제 요청: chatRoomId={}, userid={}", chatRoomId, userid);
 
             boolean deleted;
-            if (userId != null) {
+            if (userid != null) {
                 // ✅ 권한 확인 포함 삭제
-                deleted = chatRoomService.deleteChatRoom(chatRoomId, userId);
+                deleted = chatRoomService.deleteChatRoom(chatRoomId, userid);
             } else {
                 // ✅ 관리자 삭제 (권한 확인 없음)
                 chatRoomService.deleteChatRoom(chatRoomId);
@@ -130,14 +130,14 @@ public class ChatRoomController {
      */
     @GetMapping("/search")
     public ResponseEntity<List<ChatRoomResponseDTO>> searchChatRooms(
-            @RequestParam String userId,
+            @RequestParam String userid,
             @RequestParam String keyword) {
 
         try {
-            log.info("채팅방 검색: userId={}, keyword={}", userId, keyword);
+            log.info("채팅방 검색: userid={}, keyword={}", userid, keyword);
 
             // 실제 구현에서는 ChatRoomService에 검색 메서드 추가 필요
-            List<ChatRoomResponseDTO> allRooms = chatRoomService.getChatRoomsByUser(userId);
+            List<ChatRoomResponseDTO> allRooms = chatRoomService.getChatRoomsByUser(userid);
 
             // ✅ 클라이언트 사이드 필터링 (임시)
             List<ChatRoomResponseDTO> filteredRooms = allRooms.stream()
@@ -159,17 +159,17 @@ public class ChatRoomController {
     @GetMapping("/{chatRoomId}/unread-count")
     public ResponseEntity<Map<String, Object>> getUnreadMessageCount(
             @PathVariable Long chatRoomId,
-            @RequestParam String userId) {
+            @RequestParam String userid) {
 
         try {
-            log.info("읽지 않은 메시지 수 조회: chatRoomId={}, userId={}", chatRoomId, userId);
+            log.info("읽지 않은 메시지 수 조회: chatRoomId={}, userid={}", chatRoomId, userid);
 
             // 실제 구현에서는 ChatRoomService에 메서드 추가 필요
             int unreadCount = 0; // 임시값
 
             Map<String, Object> response = new HashMap<>();
             response.put("chatRoomId", chatRoomId);
-            response.put("userId", userId);
+            response.put("userid", userid);
             response.put("unreadCount", unreadCount);
             response.put("timestamp", LocalDateTime.now());
 

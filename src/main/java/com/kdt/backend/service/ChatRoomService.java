@@ -26,16 +26,16 @@ public class ChatRoomService {
     /**
      * ✅ 채팅방 생성 (Java Spring 환경 [2] 반영)
      */
-    public ChatRoomResponseDTO createChatRoom(String userId, String otherUserId, Long itemId) {
+    public ChatRoomResponseDTO createChatRoom(String userid, String otherUserId, Long itemId) {
         try {
-            log.info("채팅방 생성: userId={}, otherUserId={}, itemId={}", userId, otherUserId, itemId);
+            log.info("채팅방 생성: userId={}, otherUserId={}, itemId={}", userid, otherUserId, itemId);
 
             Item item = itemRepository.findById(itemId)
                     .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다"));
 
-            User buyer = userRepository.findById(userId)
+            User buyer = userRepository.findByUserid(userid)
                     .orElseThrow(() -> new RuntimeException("구매자를 찾을 수 없습니다"));
-            User seller = userRepository.findById(otherUserId)
+            User seller = userRepository.findByUserid(otherUserId)
                     .orElseThrow(() -> new RuntimeException("판매자를 찾을 수 없습니다"));
 
             // 기존 채팅방 확인
@@ -159,7 +159,7 @@ public class ChatRoomService {
         return ChatRoomResponseDTO.builder()
                 .id(chatRoom.getId()) // ✅ Long 타입 그대로 사용
                 .roomId(chatRoom.getId()) // ✅ Long 타입 그대로 사용
-                .nickname(chatRoom.getOtherUserName())
+                .nickname(chatRoom.getNickName())
                 .otherUserName(chatRoom.getOtherUserName())
                 .lastMessage(latestMessage)
                 .lastTimestamp(chatRoom.getUpdatedAt())
@@ -172,6 +172,7 @@ public class ChatRoomService {
                 .unreadCount(chatRoom.getUnreadCount() != null ? chatRoom.getUnreadCount() : 0)
                 .otherUserId(chatRoom.getOtherUserId())
                 .status(chatRoom.getStatus() != null ? chatRoom.getStatus() : "active")
+                .sellerId(chatRoom.getSeller() != null ? chatRoom.getSeller().getUserid() : null) // 이 부분 추가
                 .build();
     }
 

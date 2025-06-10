@@ -24,76 +24,76 @@ public class ChatController {
     /**
      * ✅ 채팅방 생성 (Java Spring [9] 환경 + 실시간 메시징 [8] 지원)
      */
-    @PostMapping(value = "/rooms", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<ChatRoomResponseDTO> createChatRoom(@RequestBody Map<String, Object> request) {
-        try {
-            log.info("채팅방 생성 요청 받음: {}", request);
-
-            // ✅ 요청 데이터 검증 (검색 결과 [4] 참조)
-            String userId = (String) request.get("userId");
-            String otherUserId = (String) request.get("otherUserId");
-            Object itemIdObj = request.get("itemId");
-
-            if (userId == null || otherUserId == null || itemIdObj == null) {
-                log.error("필수 파라미터 누락: userId={}, otherUserId={}, itemId={}", userId, otherUserId, itemIdObj);
-
-                Map<String, Object> errorResponse = new HashMap<>();
-                errorResponse.put("error", "필수 파라미터가 누락되었습니다.");
-                errorResponse.put("success", false);
-                errorResponse.put("timestamp", LocalDateTime.now());
-
-                return ResponseEntity.badRequest().body(null);
-            }
-
-            // ✅ itemId 타입 변환 처리
-            Long itemId;
-            try {
-                if (itemIdObj instanceof Number) {
-                    itemId = ((Number) itemIdObj).longValue();
-                } else if (itemIdObj instanceof String) {
-                    itemId = Long.parseLong((String) itemIdObj);
-                } else {
-                    throw new IllegalArgumentException("Invalid itemId format: " + itemIdObj);
-                }
-            } catch (Exception e) {
-                log.error("itemId 변환 실패: {}", itemIdObj);
-                return ResponseEntity.badRequest().body(null);
-            }
-
-            log.info("채팅방 생성 파라미터: userId={}, otherUserId={}, itemId={}", userId, otherUserId, itemId);
-
-            ChatRoomResponseDTO chatRoom = chatService.createChatRoom(userId, otherUserId, itemId);
-
-            log.info("채팅방 생성 완료: roomId={}", chatRoom.getRoomId());
-            return ResponseEntity.ok(chatRoom);
-
-        } catch (Exception e) {
-            log.error("채팅방 생성 실패: {}", e.getMessage(), e);
-
-            // ✅ 예외 처리 (검색 결과 [6] 참조 - ExceptionHandler 대신 직접 처리)
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "채팅방 생성에 실패했습니다: " + e.getMessage());
-            errorResponse.put("success", false);
-            errorResponse.put("timestamp", LocalDateTime.now());
-
-            return ResponseEntity.status(500).body(null);
-        }
-    }
+//    @PostMapping(value = "/rooms", consumes = "application/json", produces = "application/json")
+//    public ResponseEntity<ChatRoomResponseDTO> createChatRoom(@RequestBody Map<String, Object> request) {
+//        try {
+//            log.info("채팅방 생성 요청 받음: {}", request);
+//
+//            // ✅ 요청 데이터 검증 (검색 결과 [4] 참조)
+//            String userId = (String) request.get("userId");
+//            String otherUserId = (String) request.get("otherUserId");
+//            Object itemIdObj = request.get("itemId");
+//
+//            if (userId == null || otherUserId == null || itemIdObj == null) {
+//                log.error("필수 파라미터 누락: userId={}, otherUserId={}, itemId={}", userId, otherUserId, itemIdObj);
+//
+//                Map<String, Object> errorResponse = new HashMap<>();
+//                errorResponse.put("error", "필수 파라미터가 누락되었습니다.");
+//                errorResponse.put("success", false);
+//                errorResponse.put("timestamp", LocalDateTime.now());
+//
+//                return ResponseEntity.badRequest().body(null);
+//            }
+//
+//            // ✅ itemId 타입 변환 처리
+//            Long itemId;
+//            try {
+//                if (itemIdObj instanceof Number) {
+//                    itemId = ((Number) itemIdObj).longValue();
+//                } else if (itemIdObj instanceof String) {
+//                    itemId = Long.parseLong((String) itemIdObj);
+//                } else {
+//                    throw new IllegalArgumentException("Invalid itemId format: " + itemIdObj);
+//                }
+//            } catch (Exception e) {
+//                log.error("itemId 변환 실패: {}", itemIdObj);
+//                return ResponseEntity.badRequest().body(null);
+//            }
+//
+//            log.info("채팅방 생성 파라미터: userId={}, otherUserId={}, itemId={}", userId, otherUserId, itemId);
+//
+//            ChatRoomResponseDTO chatRoom = chatService.createChatRoom(userId, otherUserId, itemId);
+//
+//            log.info("채팅방 생성 완료: roomId={}", chatRoom.getRoomId());
+//            return ResponseEntity.ok(chatRoom);
+//
+//        } catch (Exception e) {
+//            log.error("채팅방 생성 실패: {}", e.getMessage(), e);
+//
+//            // ✅ 예외 처리 (검색 결과 [6] 참조 - ExceptionHandler 대신 직접 처리)
+//            Map<String, Object> errorResponse = new HashMap<>();
+//            errorResponse.put("error", "채팅방 생성에 실패했습니다: " + e.getMessage());
+//            errorResponse.put("success", false);
+//            errorResponse.put("timestamp", LocalDateTime.now());
+//
+//            return ResponseEntity.status(500).body(null);
+//        }
+//    }
 
     /**
      * ✅ 채팅방 목록 조회 (최근 등록순 [7] 정렬)
      */
     @GetMapping(value = "/rooms", produces = "application/json")
-    public ResponseEntity<List<ChatRoomResponseDTO>> getChatRooms(@RequestParam String userId) {
+    public ResponseEntity<List<ChatRoomResponseDTO>> getChatRooms(@RequestParam String userid) {
         try {
-            log.info("채팅방 목록 조회: userId={}", userId);
+            log.info("채팅방 목록 조회: userid={}", userid);
 
-            if (userId == null || userId.trim().isEmpty() || "guest".equals(userId)) {
-                log.warn("유효하지 않은 사용자 ID: {}", userId);
+            if (userid == null || userid.trim().isEmpty() || "guest".equals(userid)) {
+                log.warn("유효하지 않은 사용자 ID: {}", userid);
                 return ResponseEntity.ok(List.of());
             }
 
-            List<ChatRoomResponseDTO> chatRooms = chatService.getChatRoomsByUserId(userId);
+            List<ChatRoomResponseDTO> chatRooms = chatService.getChatRoomsByUserId(userid);
 
             log.info("채팅방 목록 조회 완료: {}개 (최근 등록순 [7])", chatRooms.size());
             return ResponseEntity.ok(chatRooms);

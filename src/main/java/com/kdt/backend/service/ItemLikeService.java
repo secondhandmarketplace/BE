@@ -20,10 +20,10 @@ public class ItemLikeService {
     private final UserRepository userRepository;
     private final ItemLikeRepository itemLikeRepository;
 
-    public void likeItem(Long itemId, String userId) {
+    public void likeItem(Long itemId, String userid) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Item not found"));
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByUserid(userid)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (itemLikeRepository.existsByItemAndUser(item, user)) return;
@@ -34,19 +34,19 @@ public class ItemLikeService {
         itemLikeRepository.save(like);
     }
 
-    public void unlikeItem(Long itemId, String userId) {
+    public void unlikeItem(Long itemId, String userid) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Item not found"));
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByUserid(userid)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         itemLikeRepository.deleteByItemAndUser(item, user);
     }
 
-    public boolean isLiked(Long itemId, String userId) {
+    public boolean isLiked(Long itemId, String userid) {
         return itemLikeRepository.existsByItemAndUser(
                 itemRepository.findById(itemId).orElseThrow(),
-                userRepository.findById(userId).orElseThrow()
+                userRepository.findById(userid).orElseThrow()
         );
     }
 
@@ -56,8 +56,8 @@ public class ItemLikeService {
         );
     }
 
-    public List<FavoriteItemDTO> getUserFavorites(String userId) {
-        User user = userRepository.findById(userId)
+    public List<FavoriteItemDTO> getUserFavorites(String userid) {
+        User user = userRepository.findById(userid)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         List<ItemLike> likes = itemLikeRepository.findByUser(user);
