@@ -140,15 +140,4 @@ public class ChatController {
         return ResponseEntity.ok(status);
     }
 
-    /**
-     * ✅ OPTIONS 메서드 지원 (CORS 프리플라이트 요청)
-     */
-    @RequestMapping(value = "/rooms", method = RequestMethod.OPTIONS)
-    public ResponseEntity<Void> handleOptions() {
-        return ResponseEntity.ok()
-                .header("Access-Control-Allow-Origin", "*")
-                .header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-                .header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-                .build();
-    }
 }

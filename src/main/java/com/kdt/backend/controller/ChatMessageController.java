@@ -1,7 +1,7 @@
 package com.kdt.backend.controller;
 
 import com.kdt.backend.dto.ChatMessageDTO;
-import com.kdt.backend.service.ChatService;
+import com.kdt.backend.service.ChatMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -19,22 +19,18 @@ import java.util.Map;
 @Slf4j
 public class ChatMessageController {
 
-    private final ChatService chatService; // ✅ 통합 ChatService 사용
+    private final ChatMessageService chatMessageService;
 
     /**
-     * ✅ 채팅방 메시지 조회 (실시간 메시징 [1] 지원)
+     * ✅ 채팅방 메시지 조회 (최근 등록순 정렬)
      */
-    @GetMapping("/{chatRoomId}")
+    @GetMapping("/room/{chatRoomId}")
     public ResponseEntity<List<ChatMessageDTO>> getMessagesByChatRoom(@PathVariable Long chatRoomId) {
         try {
             log.info("채팅 메시지 조회 요청: chatRoomId={}", chatRoomId);
-
-            // ✅ ChatService에서 직접 DTO 반환 (Java Spring [2] 환경)
-            List<ChatMessageDTO> messages = chatService.getChatMessages(chatRoomId, 0, 100);
-
+            List<ChatMessageDTO> messages = chatMessageService.getMessagesByChatRoom(chatRoomId);
             log.info("채팅 메시지 조회 완료: {}개", messages.size());
             return ResponseEntity.ok(messages);
-
         } catch (Exception e) {
             log.error("채팅 메시지 조회 실패: {}", e.getMessage());
             return ResponseEntity.status(500).body(List.of());
@@ -42,21 +38,16 @@ public class ChatMessageController {
     }
 
     /**
-     * ✅ 메시지 전송 (실시간 메시징 [1] 지원)
+     * ✅ 메시지 전송 (실시간 메시징 지원)
      */
-    @PostMapping("/{chatRoomId}")
+    @PostMapping("/room/{chatRoomId}")
     public ResponseEntity<ChatMessageDTO> sendMessage(
             @PathVariable Long chatRoomId,
             @RequestBody ChatMessageDTO messageDTO) {
-
         try {
             log.info("메시지 전송 요청: chatRoomId={}, senderId={}", chatRoomId, messageDTO.getSenderId());
-
-            // ✅ 실시간 메시지 전송 (SockJS 지원 [1])
-            ChatMessageDTO sentMessage = chatService.sendMessage(chatRoomId, messageDTO);
-
+            ChatMessageDTO sentMessage = chatMessageService.sendMessage(messageDTO, messageDTO.getSenderId());
             return ResponseEntity.ok(sentMessage);
-
         } catch (Exception e) {
             log.error("메시지 전송 실패: {}", e.getMessage());
             return ResponseEntity.status(500).build();
@@ -64,60 +55,48 @@ public class ChatMessageController {
     }
 
     /**
-     * ✅ 메시지 읽음 처리 (실시간 메시징 [1] 지원)
+     * ✅ 메시지 읽음 처리
      */
-    @PostMapping("/{chatRoomId}/read")
+    @PostMapping("/room/{chatRoomId}/read")
     public ResponseEntity<Map<String, Object>> markMessagesAsRead(
             @PathVariable Long chatRoomId,
             @RequestParam String userId) {
-
         try {
             log.info("메시지 읽음 처리: chatRoomId={}, userId={}", chatRoomId, userId);
-
-            boolean success = chatService.markMessagesAsRead(chatRoomId, userId);
-
+            chatMessageService.markMessagesAsRead(chatRoomId, userId);
             Map<String, Object> response = new HashMap<>();
-            response.put("success", success);
+            response.put("success", true);
             response.put("message", "읽음 처리가 완료되었습니다.");
             response.put("timestamp", LocalDateTime.now());
-
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
             log.error("메시지 읽음 처리 실패: {}", e.getMessage());
-
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("success", false);
             errorResponse.put("message", "읽음 처리 중 오류가 발생했습니다.");
             errorResponse.put("error", e.getMessage());
-
             return ResponseEntity.status(500).body(errorResponse);
         }
     }
 
     /**
-     * ✅ 페이징 메시지 조회 (Java Spring [2] 환경)
+     * ✅ 페이징 메시지 조회
      */
-    @GetMapping("/{chatRoomId}/paged")
+    @GetMapping("/room/{chatRoomId}/paged")
     public ResponseEntity<Map<String, Object>> getMessagesPaged(
             @PathVariable Long chatRoomId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-
         try {
             log.info("페이징 메시지 조회: chatRoomId={}, page={}, size={}", chatRoomId, page, size);
-
-            List<ChatMessageDTO> messages = chatService.getChatMessages(chatRoomId, page, size);
-
+            List<ChatMessageDTO> messages = chatMessageService.getMessagesByChatRoom(chatRoomId);
             Map<String, Object> response = new HashMap<>();
             response.put("messages", messages);
             response.put("page", page);
             response.put("size", size);
             response.put("totalCount", messages.size());
             response.put("timestamp", LocalDateTime.now());
-
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
             log.error("페이징 메시지 조회 실패: {}", e.getMessage());
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
@@ -125,26 +104,19 @@ public class ChatMessageController {
     }
 
     /**
-     * ✅ 메시지 검색 (실시간 메시징 [1] 지원)
+     * ✅ 메시지 검색 (클라이언트 필터링)
      */
-    @GetMapping("/{chatRoomId}/search")
+    @GetMapping("/room/{chatRoomId}/search")
     public ResponseEntity<List<ChatMessageDTO>> searchMessages(
             @PathVariable Long chatRoomId,
             @RequestParam String keyword) {
-
         try {
             log.info("메시지 검색: chatRoomId={}, keyword={}", chatRoomId, keyword);
-
-            // 실제 구현에서는 ChatService에 검색 메서드 추가 필요
-            List<ChatMessageDTO> messages = chatService.getChatMessages(chatRoomId, 0, 100);
-
-            // 클라이언트 사이드 필터링 (임시)
+            List<ChatMessageDTO> messages = chatMessageService.getMessagesByChatRoom(chatRoomId);
             List<ChatMessageDTO> filteredMessages = messages.stream()
                     .filter(msg -> msg.getContent().toLowerCase().contains(keyword.toLowerCase()))
                     .toList();
-
             return ResponseEntity.ok(filteredMessages);
-
         } catch (Exception e) {
             log.error("메시지 검색 실패: {}", e.getMessage());
             return ResponseEntity.status(500).body(List.of());
@@ -159,13 +131,12 @@ public class ChatMessageController {
         Map<String, Object> status = new HashMap<>();
         status.put("service", "chat-message-controller");
         status.put("status", "active");
-        status.put("realTimeMessaging", true); // 실시간 메시징 [1] 지원
-        status.put("springReactor", true); // Java Spring [2] 환경
+        status.put("realTimeMessaging", true);
+        status.put("springReactor", true);
         status.put("timestamp", LocalDateTime.now());
         status.put("features", new String[]{
                 "실시간 메시지 전송", "메시지 읽음 처리", "페이징 조회", "메시지 검색"
         });
-
         return ResponseEntity.ok(status);
     }
 }

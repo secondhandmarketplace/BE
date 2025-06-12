@@ -59,7 +59,7 @@ public class ChatService {
 
             // ✅ 새 채팅방 생성 (최근 등록순 [3] 반영)
             ChatRoom newRoom = ChatRoom.builder()
-                    .item(item)
+                    .itemTransaction(item)
                     .buyer(user)
                     .seller(otherUser)
                     .createdAt(LocalDateTime.now())
@@ -103,7 +103,7 @@ public class ChatService {
             }
 
             // ✅ 최근 등록순으로 정렬 (사용자 선호사항 [3])
-            List<ChatRoom> chatRooms = chatRoomRepository.findByBuyer_UseridOrSeller_UseridOrderByUpdatedAtDesc(userid, userid);
+            List<ChatRoom> chatRooms = chatRoomRepository.findChatRoomsByUser(userid);
 
             List<ChatRoomResponseDTO> result = chatRooms.stream()
                     .map(room -> convertToChatRoomResponseDTO(room, userid))
@@ -273,17 +273,15 @@ public class ChatService {
 
             return ChatRoomResponseDTO.builder()
                     .id(chatRoom.getId())
-                    .roomId(chatRoom.getId())
-                    .nickname(otherUserName)
+//                    .nickname(otherUserName)
                     .otherUserName(otherUserName)
                     .lastMessage(chatRoom.getLastMessage() != null ? chatRoom.getLastMessage() : "메시지가 없습니다.")
-                    .lastTimestamp(chatRoom.getUpdatedAt())
                     .updatedAt(chatRoom.getUpdatedAt())
-                    .itemImageUrl(chatRoom.getItem() != null ? chatRoom.getItem().getFirstImagePath() : "/assets/default-image.png")
-                    .imageUrl(chatRoom.getItem() != null ? chatRoom.getItem().getFirstImagePath() : "/assets/default-image.png")
-                    .itemId(chatRoom.getItem() != null ? chatRoom.getItem().getItemid() : null)
-                    .itemTitle(chatRoom.getItem() != null ? chatRoom.getItem().getTitle() : "상품명 없음")
-                    .itemPrice(chatRoom.getItem() != null ? chatRoom.getItem().getPrice() : 0)
+                    .itemImageUrl(chatRoom.getItemTransaction() != null ? chatRoom.getItemTransaction().getFirstImagePath() : "/assets/default-image.png")
+                    .itemImageUrl(chatRoom.getItemTransaction() != null ? chatRoom.getItemTransaction().getFirstImagePath() : "/assets/default-image.png")
+                    .id(chatRoom.getItemTransaction() != null ? chatRoom.getItemTransaction().getItemid() : null)
+                    .itemTitle(chatRoom.getItemTransaction()!= null ? chatRoom.getItemTransaction().getTitle() : "상품명 없음")
+                    .itemPrice(chatRoom.getItemTransaction() != null ? chatRoom.getItemTransaction().getPrice() : 0)
                     .unreadCount(chatRoom.getUnreadCount() != null ? chatRoom.getUnreadCount() : 0)
                     .otherUserId(otherUserId)
                     .status(chatRoom.getStatus() != null ? chatRoom.getStatus() : "active")

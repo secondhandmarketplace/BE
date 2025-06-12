@@ -1,11 +1,12 @@
 package com.kdt.backend.service;
 
 import com.kdt.backend.dto.ChatMessageDTO;
-import com.kdt.backend.dto.MessageResponseDTO;
+import com.kdt.backend.dto.ChatRoomResponseDTO;
 import com.kdt.backend.entity.ChatMessage;
 import com.kdt.backend.entity.ChatRoom;
 import com.kdt.backend.entity.User;
 import com.kdt.backend.repository.ChatMessageRepository;
+import com.kdt.backend.repository.ChatRoomRepository;
 import com.kdt.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,35 +25,44 @@ import java.util.stream.Collectors;
 public class ChatMessageService {
 
     private final ChatMessageRepository chatMessageRepository;
+    private final ChatRoomRepository chatRoomRepository; // ✅ ChatRoom 엔티티 조회를 위해 필요
     private final ChatRoomService chatRoomService;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
     /**
-     * ✅ 메시지 전송 (최근 등록순 정렬 [3] 반영)
+     * ✅ 메시지 전송 (최근 등록순 정렬 반영)
      */
-    public ChatMessageDTO sendMessage(ChatMessageDTO  dto) {
+    public ChatMessageDTO sendMessage(ChatMessageDTO dto, String currentUserId) {
         try {
             log.info("메시지 전송 시작: roomId={}, senderId={}", dto.getChatRoomId(), dto.getSenderId());
 
-            ChatRoom chatRoom = chatRoomService.getChatRoomById(dto.getChatRoomId());
+            // ✅ 메시지 전송자는 반드시 현재 로그인 사용자여야 하므로, currentUserId == dto.getSenderId() 검증 필요
+            if (!currentUserId.equals(dto.getSenderId())) {
+                throw new RuntimeException("메시지 전송 권한이 없습니다");
+            }
+
+            // ✅ ChatRoom 엔티티 조회 (DTO가 아닌 엔티티로 저장해야 함)
+            ChatRoom chatRoom = chatRoomRepository.findById(dto.getChatRoomId())
+                    .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다"));
             User sender = userRepository.findById(dto.getSenderId())
                     .orElseThrow(() -> new RuntimeException("보낸 사람을 찾을 수 없습니다"));
 
-            // ✅ LocalDateTime 사용 (Java Spring 환경 [1] 반영)
+            // ✅ LocalDateTime 사용
             ChatMessage message = ChatMessage.builder()
                     .chatRoom(chatRoom)
                     .sender(sender)
                     .content(dto.getContent())
-                    .sentAt(LocalDateTime.now()) // ✅ LocalDateTime 사용
+                    .sentAt(LocalDateTime.now())
                     .isRead(false)
                     .build();
 
             ChatMessage saved = chatMessageRepository.save(message);
 
-            // ✅ 채팅방 최신 메시지 업데이트 (최근 등록순 [3] 반영)
+            // ✅ 채팅방 최신 메시지 업데이트 (ChatRoom 엔티티는 따로 저장 필요)
             chatRoom.setLastMessage(dto.getContent());
             chatRoom.setUpdatedAt(LocalDateTime.now());
+            chatRoomRepository.save(chatRoom);
 
             // ✅ 응답 DTO 생성
             ChatMessageDTO response = ChatMessageDTO.builder()
@@ -78,11 +88,11 @@ public class ChatMessageService {
     }
 
     /**
-     * ✅ 채팅방 메시지 조회 (최근 등록순 [3] 반영)
+     * ✅ 채팅방 메시지 조회 (최근 등록순 정렬 반영)
      */
     public List<ChatMessageDTO> getMessagesByChatRoom(Long chatRoomId) {
         try {
-            // ✅ 최근 등록순으로 정렬 (사용자 선호사항 [3])
+            // ✅ 최근 등록순으로 정렬
             List<ChatMessage> messages = chatMessageRepository.findByChatRoom_IdOrderBySentAtDesc(chatRoomId);
 
             return messages.stream()

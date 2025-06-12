@@ -15,63 +15,36 @@ import java.util.Optional;
 @Repository
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
-    // ✅ 최근 등록순으로 정렬 (사용자 선호사항 [1] 반영)
-    List<ChatRoom> findByBuyer_UseridOrSeller_UseridOrderByUpdatedAtDesc(String buyerId, String sellerId);
+    @Query("SELECT cr FROM ChatRoom cr " +
+            "WHERE cr.buyer.userid = :buyerId " +
+            "AND cr.seller.userid = :sellerId " +
+            "AND cr.itemTransaction.itemid = :itemTransactionId")
+    List<ChatRoom> findChatRooms(@Param("buyerId") String buyerId,
+                                 @Param("sellerId") String sellerId,
+                                 @Param("itemTransactionId") Long itemTransactionId);
 
-    // ✅ 생성일 기준 최근 등록순 정렬 (사용자 선호사항 [1])
-    List<ChatRoom> findByBuyer_UseridOrSeller_UseridOrderByCreatedAtDesc(String buyerId, String sellerId);
+    @Query("SELECT cr FROM ChatRoom cr WHERE cr.buyer.userid = :userId OR cr.seller.userid = :userId ORDER BY cr.updatedAt DESC")
+    List<ChatRoom> findChatRoomsByUser(@Param("userId") String userId);
 
-    // ✅ 특정 아이템과 사용자 조합으로 채팅방 찾기
-    Optional<ChatRoom> findByItemAndBuyerAndSeller(Item item, User buyer, User seller);
+    @Query("SELECT c FROM ChatRoom c WHERE (c.buyer.userid = :user1Id AND c.seller.userid = :user2Id) OR (c.buyer.userid = :user2Id AND c.seller.userid = :user1Id) ORDER BY c.updatedAt DESC")
+    List<ChatRoom> findChatRoomsBetweenUsers(@Param("user1Id") String user1Id, @Param("user2Id") String user2Id);
 
-    // ✅ 아이템별 채팅방 조회 (최근 등록순 [1])
-    List<ChatRoom> findByItemOrderByUpdatedAtDesc(Item item);
+    @Query("SELECT c FROM ChatRoom c WHERE (c.buyer.userid = :userId OR c.seller.userid = :userId) AND LOWER(c.itemTransaction.title) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY c.updatedAt DESC")
+    List<ChatRoom> findChatRoomsByUserAndItemKeyword(@Param("userId") String userId, @Param("keyword") String keyword);
 
-    // ✅ 활성 채팅방만 조회 (최근 등록순 [1])
-    @Query("SELECT c FROM ChatRoom c WHERE (c.buyer.userid = :userid OR c.seller.userid = :userid) AND c.status = '판매중' ORDER BY c.updatedAt DESC")
-    List<ChatRoom> findActiveChatRoomsByUser(@Param("userid") String userid);
-
-    // ✅ 읽지 않은 메시지가 있는 채팅방 조회 (실시간 메시징 [2] 지원)
-    @Query("SELECT c FROM ChatRoom c WHERE (c.buyer.userid = :userid OR c.seller.userid = :userid) AND c.unreadCount > 0 ORDER BY c.updatedAt DESC")
-    List<ChatRoom> findChatRoomsWithUnreadMessages(@Param("userid") String userid);
-
-    // ✅ 특정 기간 활동한 채팅방 조회 (Java Spring 환경 [3] 반영)
-    @Query("SELECT c FROM ChatRoom c WHERE (c.buyer.userid = :userid OR c.seller.userid = :userid) AND c.updatedAt BETWEEN :startDate AND :endDate ORDER BY c.updatedAt DESC")
+    @Query("SELECT c FROM ChatRoom c WHERE (c.buyer.userid = :userId OR c.seller.userid = :userId) AND c.updatedAt BETWEEN :startDate AND :endDate ORDER BY c.updatedAt DESC")
     List<ChatRoom> findChatRoomsByUserAndDateRange(
-            @Param("userid") String userid,
+            @Param("userId") String userId,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
 
-    // ✅ 구매자별 채팅방 조회 (최근 등록순 [1])
-    List<ChatRoom> findByBuyer_UseridOrderByUpdatedAtDesc(String buyerId);
+    @Query("SELECT c FROM ChatRoom c WHERE (c.buyer.userid = :userId OR c.seller.userid = :userId) AND c.unreadCount > 0 ORDER BY c.updatedAt DESC")
+    List<ChatRoom> findChatRoomsWithUnreadMessages(@Param("userId") String userId);
 
-    // ✅ 판매자별 채팅방 조회 (최근 등록순 [1])
-    List<ChatRoom> findBySeller_UseridOrderByUpdatedAtDesc(String sellerId);
+    @Query("SELECT COUNT(c) FROM ChatRoom c WHERE c.buyer.userid = :userId OR c.seller.userid = :userId")
+    Long countChatRoomsByUser(@Param("userId") String userId);
 
-    // ✅ 아이템 ID로 채팅방 조회 (최근 등록순 [1])
-    List<ChatRoom> findByItem_ItemidOrderByUpdatedAtDesc(Long itemId);
-
-    // ✅ 상태별 채팅방 조회 (최근 등록순 [1])
-    List<ChatRoom> findByStatusOrderByUpdatedAtDesc(String status);
-
-    // ✅ 채팅방 검색 (대화형 인공지능 [4] 지원)
-    @Query("SELECT c FROM ChatRoom c WHERE (c.buyer.userid = :userid OR c.seller.userid = :userid) AND LOWER(c.item.title) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY c.updatedAt DESC")
-    List<ChatRoom> findChatRoomsByUserAndItemKeyword(@Param("userid") String userid, @Param("keyword") String keyword);
-
-    // ✅ 최근 활동 채팅방 조회 (실시간 메시징 [2] 지원)
-    @Query("SELECT c FROM ChatRoom c WHERE (c.buyer.userid = :userid OR c.seller.userid = :userid) AND c.updatedAt > :timestamp ORDER BY c.updatedAt DESC")
-    List<ChatRoom> findRecentlyActiveChatRooms(@Param("userid") String userid, @Param("timestamp") LocalDateTime timestamp);
-
-    // ✅ 채팅방 통계 조회
-    @Query("SELECT COUNT(c) FROM ChatRoom c WHERE c.buyer.userid = :userid OR c.seller.userid = :userid")
-    Long countChatRoomsByUser(@Param("userid") String userid);
-
-    // ✅ 특정 사용자 간 채팅방 조회
-    @Query("SELECT c FROM ChatRoom c WHERE (c.buyer.userid = :user1 AND c.seller.userid = :user2) OR (c.buyer.userid = :user2 AND c.seller.userid = :user1) ORDER BY c.updatedAt DESC")
-    List<ChatRoom> findChatRoomsBetweenUsers(@Param("user1") String user1, @Param("user2") String user2);
-
-    // ✅ 아이템과 사용자로 채팅방 찾기 (어느 쪽이든 구매자/판매자 가능)
-    @Query("SELECT c FROM ChatRoom c WHERE c.item = :item AND ((c.buyer = :user1 AND c.seller = :user2) OR (c.buyer = :user2 AND c.seller = :user1))")
+    @Query("SELECT c FROM ChatRoom c WHERE c.itemTransaction = :item AND ((c.buyer = :user1 AND c.seller = :user2) OR (c.buyer = :user2 AND c.seller = :user1))")
     Optional<ChatRoom> findByItemAndUsers(@Param("item") Item item, @Param("user1") User user1, @Param("user2") User user2);
 }

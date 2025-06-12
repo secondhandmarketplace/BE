@@ -1,5 +1,6 @@
 package com.kdt.backend.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,21 +12,19 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ChatRoomResponseDTO {
-    private Long id; // ✅ Long 타입 유지
-    private Long roomId; // ✅ Long 타입 유지
-    private String nickname; // 채팅방 생성자의 이름
-    private String otherUserName; // 상대방 사용자 이름
+    private Long id; // ✅ 채팅방의 고유 ID, DTO 빌더에서 id()로 사용
+
+    private String otherUserId;
+    private String otherUserName;
+//    private String otherUserPicture;
     private String lastMessage;
-    private LocalDateTime lastTimestamp;
     private LocalDateTime updatedAt;
-    private String itemImageUrl;
-    private String imageUrl;
-    private Long itemId;
+    private Integer unreadCount;
+    private String status;
+    private Long itemTransactionId;
     private String itemTitle;
     private Integer itemPrice;
-    private Integer unreadCount;
-    private String otherUserId;
-    private String status;
-    private String sellerId; // ✅ 판매자 아이디 필드 추가
+    private String itemImageUrl;
 }
