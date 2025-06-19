@@ -14,16 +14,16 @@ public class Transaction {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "transaction_id")
+    @Column(name = "transaction_id", nullable = false)
     private Long id;
-    
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
-    
-    @ManyToOne
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private User buyer;
     
     @Column(name = "final_price", nullable = false, precision = 10, scale = 0)
     private BigDecimal finalPrice;
@@ -32,6 +32,13 @@ public class Transaction {
     private LocalDateTime transactionDate;
     
     @OneToOne
-    @JoinColumn(name = "review_id2")
+    @JoinColumn(name = "review_id2", referencedColumnName = "review_id")
     private Review review;
+
+    @PrePersist
+    protected void onCreate() {
+        if (transactionDate == null) { // transactionDate가 null일 경우 현재 시간으로 설정
+            transactionDate = LocalDateTime.now(); // 현재 시간으로 transactionDate 초기화
+        }
+    }
 } 

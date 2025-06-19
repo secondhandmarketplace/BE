@@ -1,6 +1,5 @@
 package ac.su.kdt.secondhandmarketplace.dto.product;
 
-import ac.su.kdt.secondhandmarketplace.entity.ProductStatus;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;

@@ -43,7 +43,7 @@ public class ProductRecommendationDTO {
         if (product.getUser() != null) {
             dto.setMannerScore(product.getUser().getMannerScore().doubleValue());
             dto.setSellerName(product.getUser().getNickname());
-            dto.setSellerReviewCount(reviewRepository.countByUser(product.getUser()).intValue());
+            dto.setSellerReviewCount((int) reviewRepository.countByReviewer(product.getUser()));
         }
         
         // 상품 평균 평점

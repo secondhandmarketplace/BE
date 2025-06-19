@@ -1,8 +1,3 @@
-
-/**
- * @RestControllerAdvice와 @ExceptionHandler를 사용하여 전역적인 예외 처리를 구현할 수 있습니다.
- * 이렇게 하면 각 컨트롤러 메서드에서 try-catch 블록을 사용할 필요 없이 예외를 깔끔하게 처리할 수 있습니다.
- */
 package ac.su.kdt.secondhandmarketplace;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -33,6 +28,18 @@ public class GlobalExceptionHandler {
                 errors.put(error.getField(), error.getDefaultMessage()));
         // 에러 상세 정보와 400 Bad Request 상태 코드를 반환
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<String> handleIllegalStateException(IllegalStateException ex) {
+        // 예를 들어, "이미 리뷰가 존재합니다"와 같은 경우 409 Conflict가 적합할 수 있습니다.
+        return new ResponseEntity<>("잘못된 상태 변경: " + ex.getMessage(), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
+        // 예를 들어, "판매자는 자신의 상품을 구매할 수 없습니다"와 같은 경우 400 Bad Request가 적합합니다.
+        return new ResponseEntity<>("잘못된 요청: " + ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
