@@ -1,6 +1,7 @@
 package com.kdt.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
@@ -35,24 +36,31 @@ public class User {
     private List<Item> sellingItems;
 
     @OneToMany(mappedBy = "buyer")
+    @JsonIgnore // ✅ 순환 참조 방지
     private List<Item> buyingItems;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore // ✅ 순환 참조 방지
     private List<ItemTransaction> transactions;
 
     @OneToMany(mappedBy = "reporter")
+    @JsonIgnore // ✅ 순환 참조 방지
     private List<Report> reportsSent;
 
     @OneToMany(mappedBy = "reported")
+    @JsonIgnore // ✅ 순환 참조 방지
     private List<Report> reportsReceived;
 
     @OneToMany(mappedBy = "blocker")
+    @JsonIgnore // ✅ 순환 참조 방지
     private List<Block> blockedUsers;
 
     @OneToMany(mappedBy = "blocked")
+    @JsonIgnore // ✅ 순환 참조 방지
     private List<Block> blockingUsers;
 
     @OneToMany(mappedBy = "sender")
+    @JsonIgnore // ✅ 순환 참조 방지
     private List<ChatMessage> sentMessages;
 
 

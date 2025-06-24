@@ -6,10 +6,12 @@ import com.kdt.backend.entity.ChatRoom;
 import com.kdt.backend.entity.ChatMessage;
 import com.kdt.backend.entity.Item;
 import com.kdt.backend.entity.User;
+import com.kdt.backend.exception.ChatException;
 import com.kdt.backend.repository.ChatRoomRepository;
 import com.kdt.backend.repository.ChatMessageRepository;
 import com.kdt.backend.repository.ItemRepository;
 import com.kdt.backend.repository.UserRepository;
+import com.kdt.backend.util.ChatUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,12 +44,12 @@ public class ChatService {
 
             // ✅ 엔티티 조회 및 검증
             Item item = itemRepository.findById(itemId)
-                    .orElseThrow(() -> new RuntimeException("상품을 찾을 수 없습니다: " + itemId));
+                    .orElseThrow(() -> new ChatException("상품을 찾을 수 없습니다: " + itemId));
 
             User user = userRepository.findByUserid(userid)
-                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다: " + userid));
+                    .orElseThrow(() -> new ChatException.UserNotFoundException(userid));
             User otherUser = userRepository.findByUserid(otherUserId)
-                    .orElseThrow(() -> new RuntimeException("상대방을 찾을 수 없습니다: " + otherUserId));
+                    .orElseThrow(() -> new ChatException.UserNotFoundException(otherUserId));
 
             // ✅ 기존 채팅방 확인 (양방향 검색)
             ChatRoom existingRoom = chatRoomRepository.findByItemAndUsers(item, user, otherUser)
@@ -78,9 +81,12 @@ public class ChatService {
 
             return responseDTO;
 
+        } catch (ChatException e) {
+            log.error("채팅방 생성 서비스 실패: {}", e.getMessage(), e);
+            throw e; // 커스텀 예외는 그대로 전파
         } catch (Exception e) {
             log.error("채팅방 생성 서비스 실패: {}", e.getMessage(), e);
-            throw new RuntimeException("채팅방 생성에 실패했습니다: " + e.getMessage());
+            throw new ChatException.ChatRoomCreationException(e.getMessage(), e);
         }
     }
 
@@ -96,7 +102,7 @@ public class ChatService {
             }
 
             // ✅ 사용자 존재 확인
-            boolean userExists = userRepository.existsById(userid);
+            boolean userExists = userRepository.existsByUserid(userid);
             if (!userExists) {
                 log.warn("존재하지 않는 사용자: {}", userid);
                 return List.of();
@@ -127,16 +133,26 @@ public class ChatService {
             log.info("메시지 전송: roomId={}, senderId={}", roomId, messageDTO.getSenderId());
 
             ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                    .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new ChatException.ChatRoomNotFoundException(roomId));
 
-            User sender = userRepository.findById(messageDTO.getSenderId())
-                    .orElseThrow(() -> new RuntimeException("발신자를 찾을 수 없습니다."));
+            User sender = userRepository.findByUserid(messageDTO.getSenderId())
+                    .orElseThrow(() -> new ChatException.UserNotFoundException(messageDTO.getSenderId()));
+
+            // ✅ 메시지 내용 검증 및 정리
+            if (!ChatUtils.isValidMessage(messageDTO.getContent())) {
+                throw new ChatException.MessageSendFailedException("유효하지 않은 메시지 내용입니다.");
+            }
+
+            // ✅ 채팅방 접근 권한 확인
+            if (!ChatUtils.hasAccessToChatRoom(chatRoom, messageDTO.getSenderId())) {
+                throw new ChatException.UnauthorizedAccessException("채팅방 접근 권한이 없습니다.");
+            }
 
             // ✅ 메시지 저장 (Java Spring [4] 환경)
             ChatMessage message = ChatMessage.builder()
                     .chatRoom(chatRoom)
                     .sender(sender)
-                    .content(messageDTO.getContent())
+                    .content(ChatUtils.sanitizeMessage(messageDTO.getContent()))
                     .sentAt(LocalDateTime.now())
                     .isRead(false)
                     .build();
@@ -159,14 +175,20 @@ public class ChatService {
             ChatMessageDTO responseDTO = convertToChatMessageDTO(savedMessage);
 
             // ✅ 실시간 WebSocket 브로드캐스트 (실시간 메시징 [1])
-            messagingTemplate.convertAndSend("/topic/chat/" + roomId, responseDTO);
+            messagingTemplate.convertAndSend(ChatUtils.createChatTopic(roomId), responseDTO);
+
+            // ✅ 상대방에게 알림 전송
+            messagingTemplate.convertAndSend(ChatUtils.createUserNotificationTopic(otherUserId), responseDTO);
 
             log.info("메시지 전송 완료: messageId={}", savedMessage.getId());
             return responseDTO;
 
+        } catch (ChatException e) {
+            log.error("메시지 전송 실패: {}", e.getMessage(), e);
+            throw e; // 커스텀 예외는 그대로 전파
         } catch (Exception e) {
             log.error("메시지 전송 실패: {}", e.getMessage(), e);
-            throw new RuntimeException("메시지 전송에 실패했습니다: " + e.getMessage());
+            throw new ChatException.MessageSendFailedException(e.getMessage(), e);
         }
     }
 
@@ -218,17 +240,66 @@ public class ChatService {
     }
 
     /**
+     * ✅ 채팅방 정보 조회 (단일 채팅방)
+     */
+    public ChatRoomResponseDTO getChatRoomById(Long roomId, String userId) {
+        try {
+            log.info("채팅방 정보 조회: roomId={}, userId={}", roomId, userId);
+
+            Optional<ChatRoom> chatRoomOpt = chatRoomRepository.findById(roomId);
+            if (chatRoomOpt.isEmpty()) {
+                log.warn("채팅방을 찾을 수 없음: roomId={}", roomId);
+                return null;
+            }
+
+            ChatRoom chatRoom = chatRoomOpt.get();
+
+            // ✅ 권한 확인: 구매자 또는 판매자만 조회 가능
+            if (!chatRoom.getBuyer().getUserid().equals(userId) && !chatRoom.getSeller().getUserid().equals(userId)) {
+                log.warn("채팅방 조회 권한 없음: roomId={}, userId={}, buyerId={}, sellerId={}",
+                        roomId, userId, chatRoom.getBuyer().getUserid(), chatRoom.getSeller().getUserid());
+                return null;
+            }
+
+            // ✅ 상대방 정보 가져오기
+            User otherUser = ChatUtils.getOtherUser(chatRoom, userId);
+
+            // ✅ 아이템 정보 가져오기
+            Item item = chatRoom.getItemTransaction();
+
+            // ✅ DTO 생성
+            ChatRoomResponseDTO.ChatRoomResponseDTOBuilder builder = ChatUtils.createChatRoomBuilder(chatRoom, userId);
+
+            if (item != null) {
+                builder.itemTransactionId(item.getItemid()) // itemTransactionId 추가
+                        .itemId(item.getItemid())
+                        .itemTitle(item.getTitle())
+                        .itemPrice(item.getPrice())
+                        .itemImageUrl(item.getThumbnail());
+            }
+
+            ChatRoomResponseDTO result = builder.build();
+            log.info("채팅방 정보 조회 완료: roomId={}, otherUserId={}", roomId, result.getOtherUserId());
+            return result;
+
+        } catch (Exception e) {
+            log.error("채팅방 정보 조회 실패: roomId={}, userId={}, error={}", roomId, userId, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    /**
      * ✅ 채팅방 삭제
      */
     public boolean deleteChatRoom(Long roomId, String userid) {
         try {
             ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                    .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new ChatException.ChatRoomNotFoundException(roomId));
 
             // ✅ 권한 확인
             if (!chatRoom.getBuyer().getUserid().equals(userid) &&
                     !chatRoom.getSeller().getUserid().equals(userid)) {
-                throw new RuntimeException("채팅방 삭제 권한이 없습니다.");
+                throw new ChatException.UnauthorizedAccessException("채팅방 삭제");
             }
 
             // ✅ 메시지 먼저 삭제
@@ -273,17 +344,15 @@ public class ChatService {
 
             return ChatRoomResponseDTO.builder()
                     .id(chatRoom.getId())
-//                    .nickname(otherUserName)
+                    .otherUserId(otherUserId)
                     .otherUserName(otherUserName)
                     .lastMessage(chatRoom.getLastMessage() != null ? chatRoom.getLastMessage() : "메시지가 없습니다.")
                     .updatedAt(chatRoom.getUpdatedAt())
                     .itemImageUrl(chatRoom.getItemTransaction() != null ? chatRoom.getItemTransaction().getFirstImagePath() : "/assets/default-image.png")
-                    .itemImageUrl(chatRoom.getItemTransaction() != null ? chatRoom.getItemTransaction().getFirstImagePath() : "/assets/default-image.png")
-                    .id(chatRoom.getItemTransaction() != null ? chatRoom.getItemTransaction().getItemid() : null)
-                    .itemTitle(chatRoom.getItemTransaction()!= null ? chatRoom.getItemTransaction().getTitle() : "상품명 없음")
+                    .itemId(chatRoom.getItemTransaction() != null ? chatRoom.getItemTransaction().getItemid() : null)
+                    .itemTitle(chatRoom.getItemTransaction() != null ? chatRoom.getItemTransaction().getTitle() : "상품명 없음")
                     .itemPrice(chatRoom.getItemTransaction() != null ? chatRoom.getItemTransaction().getPrice() : 0)
                     .unreadCount(chatRoom.getUnreadCount() != null ? chatRoom.getUnreadCount() : 0)
-                    .otherUserId(otherUserId)
                     .status(chatRoom.getStatus() != null ? chatRoom.getStatus() : "active")
                     .build();
 

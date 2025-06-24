@@ -35,7 +35,7 @@ const AllRoutes = () => (
 
     {/* Item/Chat */}
     <Route path="/item/:id" element={<ItemDetailPage />} />
-    <Route path="/chat" element={<ChatPage />} />
+    <Route path="/chat/:roomId" element={<ChatPage />} />
     <Route path="/chatList" element={<ChatListPage />} />
 
     {/* History */}

@@ -5,8 +5,10 @@ import com.kdt.backend.dto.ChatRoomResponseDTO;
 import com.kdt.backend.service.ChatRoomService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -14,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/chat/rooms")
+@RequestMapping("/api/chatroom")
 @CrossOrigin(originPatterns = "*", allowCredentials = "true")
 @RequiredArgsConstructor
 @Slf4j
@@ -38,7 +40,7 @@ public class ChatRoomController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("채팅방 생성/조회 실패: {}", e.getMessage(), e);
-            return ResponseEntity.status(500).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
@@ -69,7 +71,7 @@ public class ChatRoomController {
             return ResponseEntity.ok(roomDetails);
         } catch (Exception e) {
             log.error("채팅방 상세 조회 실패: {}", e.getMessage());
-            return ResponseEntity.status(500).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
@@ -84,7 +86,7 @@ public class ChatRoomController {
         errorResponse.put("message", e.getMessage());
         errorResponse.put("success", false);
         errorResponse.put("timestamp", LocalDateTime.now());
-        return ResponseEntity.status(500).body(errorResponse);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 
     /**

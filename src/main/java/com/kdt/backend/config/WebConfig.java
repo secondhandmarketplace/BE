@@ -33,8 +33,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:" + uploadPath);
 
-        registry.addResourceHandler("/api/image/**")
-                .addResourceLocations("file:" + System.getProperty("user.dir") + "/uploads/");
+        // ✅ /api/image/** 매핑 제거 - ImageController에서 처리
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.kdt.backend.dto.ChatMessageDTO;
 import com.kdt.backend.service.ChatMessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,8 +33,8 @@ public class ChatMessageController {
             log.info("채팅 메시지 조회 완료: {}개", messages.size());
             return ResponseEntity.ok(messages);
         } catch (Exception e) {
-            log.error("채팅 메시지 조회 실패: {}", e.getMessage());
-            return ResponseEntity.status(500).body(List.of());
+            log.error("채팅 메시지 조회 실패: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
         }
     }
 
@@ -49,8 +50,11 @@ public class ChatMessageController {
             ChatMessageDTO sentMessage = chatMessageService.sendMessage(messageDTO, messageDTO.getSenderId());
             return ResponseEntity.ok(sentMessage);
         } catch (Exception e) {
-            log.error("메시지 전송 실패: {}", e.getMessage());
-            return ResponseEntity.status(500).build();
+            log.error("메시지 전송 실패: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ChatMessageDTO.builder()
+                            .content("메시지 전송에 실패했습니다.")
+                            .build());
         }
     }
 
@@ -75,7 +79,7 @@ public class ChatMessageController {
             errorResponse.put("success", false);
             errorResponse.put("message", "읽음 처리 중 오류가 발생했습니다.");
             errorResponse.put("error", e.getMessage());
-            return ResponseEntity.status(500).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 
@@ -99,7 +103,7 @@ public class ChatMessageController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("페이징 메시지 조회 실패: {}", e.getMessage());
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -119,7 +123,7 @@ public class ChatMessageController {
             return ResponseEntity.ok(filteredMessages);
         } catch (Exception e) {
             log.error("메시지 검색 실패: {}", e.getMessage());
-            return ResponseEntity.status(500).body(List.of());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of());
         }
     }
 

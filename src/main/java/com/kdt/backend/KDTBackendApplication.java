@@ -8,7 +8,5 @@ public class KDTBackendApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(KDTBackendApplication.class, args);
-
 	}
-
 }

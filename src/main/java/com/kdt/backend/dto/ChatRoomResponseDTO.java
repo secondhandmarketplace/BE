@@ -24,6 +24,7 @@ public class ChatRoomResponseDTO {
     private Integer unreadCount;
     private String status;
     private Long itemTransactionId;
+    private Long itemId; // ✅ 상품 ID 추가
     private String itemTitle;
     private Integer itemPrice;
     private String itemImageUrl;

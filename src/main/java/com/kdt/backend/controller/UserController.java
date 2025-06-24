@@ -168,9 +168,18 @@ public class UserController {
                 return ResponseEntity.status(404).body(notFoundResponse);
             }
 
+            // ✅ 순환 참조 방지를 위해 필요한 정보만 반환
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("userid", user.getUserid());
+            userInfo.put("name", user.getName());
+            userInfo.put("email", user.getEmail());
+            userInfo.put("phone", user.getPhone());
+            userInfo.put("status", user.getStatus());
+            userInfo.put("mannerScore", user.getMannerScore());
+
             Map<String, Object> response = new HashMap<>();
             response.put("found", true);
-            response.put("user", user);
+            response.put("user", userInfo); // ✅ 간소화된 사용자 정보만 반환
             response.put("timestamp", LocalDateTime.now());
 
             return ResponseEntity.ok(response);

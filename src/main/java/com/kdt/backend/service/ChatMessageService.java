@@ -1,10 +1,10 @@
 package com.kdt.backend.service;
 
 import com.kdt.backend.dto.ChatMessageDTO;
-import com.kdt.backend.dto.ChatRoomResponseDTO;
 import com.kdt.backend.entity.ChatMessage;
 import com.kdt.backend.entity.ChatRoom;
 import com.kdt.backend.entity.User;
+import com.kdt.backend.exception.ChatException;
 import com.kdt.backend.repository.ChatMessageRepository;
 import com.kdt.backend.repository.ChatRoomRepository;
 import com.kdt.backend.repository.UserRepository;
@@ -26,7 +26,6 @@ public class ChatMessageService {
 
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository; // ✅ ChatRoom 엔티티 조회를 위해 필요
-    private final ChatRoomService chatRoomService;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -39,14 +38,14 @@ public class ChatMessageService {
 
             // ✅ 메시지 전송자는 반드시 현재 로그인 사용자여야 하므로, currentUserId == dto.getSenderId() 검증 필요
             if (!currentUserId.equals(dto.getSenderId())) {
-                throw new RuntimeException("메시지 전송 권한이 없습니다");
+                throw new ChatException.UnauthorizedAccessException("메시지 전송");
             }
 
             // ✅ ChatRoom 엔티티 조회 (DTO가 아닌 엔티티로 저장해야 함)
             ChatRoom chatRoom = chatRoomRepository.findById(dto.getChatRoomId())
-                    .orElseThrow(() -> new RuntimeException("채팅방을 찾을 수 없습니다"));
-            User sender = userRepository.findById(dto.getSenderId())
-                    .orElseThrow(() -> new RuntimeException("보낸 사람을 찾을 수 없습니다"));
+                    .orElseThrow(() -> new ChatException.ChatRoomNotFoundException(dto.getChatRoomId()));
+            User sender = userRepository.findByUserid(dto.getSenderId())
+                    .orElseThrow(() -> new ChatException.UserNotFoundException(dto.getSenderId()));
 
             // ✅ LocalDateTime 사용
             ChatMessage message = ChatMessage.builder()
@@ -81,9 +80,12 @@ public class ChatMessageService {
             log.info("메시지 전송 완료: messageId={}", saved.getId());
             return response;
 
+        } catch (ChatException e) {
+            log.error("메시지 전송 실패: {}", e.getMessage());
+            throw e; // 커스텀 예외는 그대로 전파
         } catch (Exception e) {
             log.error("메시지 전송 실패: {}", e.getMessage());
-            throw new RuntimeException("메시지 전송에 실패했습니다: " + e.getMessage());
+            throw new ChatException.MessageSendFailedException(e.getMessage(), e);
         }
     }
 
@@ -129,19 +131,22 @@ public class ChatMessageService {
     public void deleteMessage(Long messageId, String userId) {
         try {
             ChatMessage message = chatMessageRepository.findById(messageId)
-                    .orElseThrow(() -> new RuntimeException("메시지를 찾을 수 없습니다"));
+                    .orElseThrow(() -> new ChatException("메시지를 찾을 수 없습니다: " + messageId));
 
             // 권한 확인
             if (!message.getSender().getUserid().equals(userId)) {
-                throw new RuntimeException("메시지 삭제 권한이 없습니다");
+                throw new ChatException.UnauthorizedAccessException("메시지 삭제");
             }
 
             chatMessageRepository.delete(message);
             log.info("메시지 삭제 완료: messageId={}", messageId);
 
+        } catch (ChatException e) {
+            log.error("메시지 삭제 실패: {}", e.getMessage());
+            throw e; // 커스텀 예외는 그대로 전파
         } catch (Exception e) {
             log.error("메시지 삭제 실패: {}", e.getMessage());
-            throw new RuntimeException("메시지 삭제에 실패했습니다");
+            throw new ChatException("메시지 삭제에 실패했습니다: " + e.getMessage());
         }
     }
 

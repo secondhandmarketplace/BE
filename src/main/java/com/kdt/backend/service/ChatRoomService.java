@@ -4,6 +4,7 @@ import com.kdt.backend.dto.ChatRoomResponseDTO;
 import com.kdt.backend.entity.ChatRoom;
 import com.kdt.backend.entity.Item;
 import com.kdt.backend.entity.User;
+import com.kdt.backend.exception.ChatException;
 import com.kdt.backend.exception.NotFoundException;
 import com.kdt.backend.repository.ChatMessageRepository;
 import com.kdt.backend.repository.ChatRoomRepository;
@@ -31,12 +32,12 @@ public class ChatRoomService {
 
     @Transactional
     public ChatRoomResponseDTO createOrGetChatRoom(String buyerId, String sellerId, Long itemTransactionId) {
-        User buyer = userRepository.findById(buyerId)
-                .orElseThrow(() -> new NotFoundException("구매자를 찾을 수 없습니다: " + buyerId));
-        User seller = userRepository.findById(sellerId)
-                .orElseThrow(() -> new NotFoundException("판매자를 찾을 수 없습니다: " + sellerId));
+        User buyer = userRepository.findByUserid(buyerId)
+                .orElseThrow(() -> new ChatException.UserNotFoundException(buyerId));
+        User seller = userRepository.findByUserid(sellerId)
+                .orElseThrow(() -> new ChatException.UserNotFoundException(sellerId));
         Item item = itemRepository.findById(itemTransactionId)
-                .orElseThrow(() -> new NotFoundException("상품을 찾을 수 없습니다: " + itemTransactionId));
+                .orElseThrow(() -> new ChatException("상품을 찾을 수 없습니다: " + itemTransactionId));
 
         Optional<ChatRoom> existingRoomOpt = chatRoomRepository.findByItemAndUsers(item, buyer, seller);
 
@@ -54,8 +55,8 @@ public class ChatRoomService {
     }
 
     public List<ChatRoomResponseDTO> getChatRoomsByUser(String userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("사용자를 찾을 수 없습니다: " + userId);
+        if (!userRepository.existsByUserid(userId)) {
+            throw new ChatException.UserNotFoundException(userId);
         }
         List<ChatRoom> rooms = chatRoomRepository.findChatRoomsByUser(userId);
         return rooms.stream()
@@ -65,7 +66,7 @@ public class ChatRoomService {
 
     public ChatRoomResponseDTO getChatRoomDetails(Long chatRoomId, String userId) {
         ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-                .orElseThrow(() -> new NotFoundException("채팅방을 찾을 수 없습니다: " + chatRoomId));
+                .orElseThrow(() -> new ChatException.ChatRoomNotFoundException(chatRoomId));
         return convertToDto(chatRoom, userId);
     }
 
@@ -79,18 +80,20 @@ public class ChatRoomService {
                 .orElse("대화를 시작해보세요.");
 
         return ChatRoomResponseDTO.builder()
-                .id(chatRoom.getId()) // ✅ id() 메서드 사용
+                .id(chatRoom.getId())
                 .otherUserId(otherUser.getUserid())
                 .otherUserName(otherUser.getName())
-                // .otherUserPicture(otherUser.getPicture()) // User 엔티티에 해당 필드가 없다면 주석 처리
                 .lastMessage(lastMessage)
                 .updatedAt(chatRoom.getUpdatedAt())
-                .unreadCount(chatRoom.getUnreadCount())
-                .status(chatRoom.getStatus())
-                .itemTransactionId(chatRoom.getItemTransaction().getItemid()) // ✅ getItemid() 사용
+                .unreadCount(chatRoom.getUnreadCount() != null ? chatRoom.getUnreadCount() : 0)
+                .status(chatRoom.getStatus() != null ? chatRoom.getStatus() : "ACTIVE")
+                .itemTransactionId(chatRoom.getItemTransaction().getItemid())
+                .itemId(chatRoom.getItemTransaction().getItemid()) // ✅ itemId 필드 추가
                 .itemTitle(chatRoom.getItemTransaction().getTitle())
                 .itemPrice(chatRoom.getItemTransaction().getPrice())
-                .itemImageUrl(chatRoom.getItemTransaction().getThumbnail())
+                .itemImageUrl(chatRoom.getItemTransaction().getFirstImagePath() != null
+                    ? chatRoom.getItemTransaction().getFirstImagePath()
+                    : "/assets/default-image.png")
                 .build();
     }
 }

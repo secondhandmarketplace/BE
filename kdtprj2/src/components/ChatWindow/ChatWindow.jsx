@@ -109,7 +109,6 @@ const ChatWindow = ({ roomId, itemId, otherUserId }) => {
     if (!inputMessage.trim()) return;
 
     const messageData = {
-      senderId: userId,
       content: inputMessage.trim(),
       chatRoomId: roomId,
       timestamp: new Date().toISOString(),

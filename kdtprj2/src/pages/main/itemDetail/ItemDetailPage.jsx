@@ -168,8 +168,8 @@ function ItemDetailPage() {
   const nextImg = () => setCurrent((current + 1) % images.length);
 
   const handleChatClick = () => {
-    const roomId = makeRoomIdFromItem(item);
-    navigate("/chat", { state: { ...item, roomId } });
+    // ✅ 채팅방 생성 API를 호출하여 실제 roomId를 받아서 이동
+    handleStartChat();
   };
 
   if (loading) {
